@@ -521,6 +521,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "console"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0b1aacfaffdbff75be81c15a399b4bedf78aaefe840e8af1d299ac2ade885d2"
+dependencies = [
+ "encode_unicode",
+ "lazy_static",
+ "libc",
+ "regex",
+ "terminal_size",
+ "termios",
+ "unicode-width",
+ "winapi 0.3.8",
+ "winapi-util",
+]
+
+[[package]]
 name = "constant_time_eq"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -705,7 +722,7 @@ version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4aa86af7b19b40ef9cbef761ed411a49f0afa06b7b6dcd3dfe2f96a3c546138"
 dependencies = [
- "console",
+ "console 0.11.3",
  "lazy_static",
  "tempfile",
 ]
@@ -1526,7 +1543,7 @@ version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7baab56125e25686df467fe470785512329883aab42696d661247aca2a2896e4"
 dependencies = [
- "console",
+ "console 0.12.0",
  "lazy_static",
  "number_prefix",
  "regex",
@@ -3414,7 +3431,7 @@ dependencies = [
  "bs58",
  "chrono",
  "clap",
- "console",
+ "console 0.12.0",
  "criterion-stats",
  "ctrlc",
  "dirs",
@@ -3650,7 +3667,7 @@ name = "solana-download-utils"
 version = "1.4.0"
 dependencies = [
  "bzip2",
- "console",
+ "console 0.12.0",
  "indicatif",
  "log 0.4.8",
  "reqwest",
@@ -3762,7 +3779,7 @@ dependencies = [
  "bzip2",
  "chrono",
  "clap",
- "console",
+ "console 0.12.0",
  "ctrlc",
  "dirs",
  "indicatif",
@@ -4112,7 +4129,7 @@ name = "solana-remote-wallet"
 version = "1.4.0"
 dependencies = [
  "base32",
- "console",
+ "console 0.12.0",
  "dialoguer",
  "hidapi",
  "log 0.4.8",
@@ -4307,7 +4324,7 @@ name = "solana-stake-monitor"
 version = "1.4.0"
 dependencies = [
  "clap",
- "console",
+ "console 0.12.0",
  "log 0.4.8",
  "serde",
  "serde_yaml",
@@ -4427,7 +4444,7 @@ version = "1.4.0"
 dependencies = [
  "chrono",
  "clap",
- "console",
+ "console 0.12.0",
  "csv",
  "dirs",
  "indexmap",
@@ -4484,7 +4501,7 @@ version = "1.4.0"
 dependencies = [
  "chrono",
  "clap",
- "console",
+ "console 0.12.0",
  "libc",
  "log 0.4.8",
  "rand 0.7.3",
@@ -4867,9 +4884,9 @@ dependencies = [
 
 [[package]]
 name = "terminal_size"
-version = "0.1.12"
+version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8038f95fc7a6f351163f4b964af631bd26c9e828f7db085f2a84aca56f70d13b"
+checksum = "9a14cd9f8c72704232f0bfc8455c0e861f0ad4eb60cc9ec8a170e231414c1e13"
 dependencies = [
  "libc",
  "winapi 0.3.8",
