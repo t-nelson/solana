@@ -142,6 +142,9 @@ pub enum CliCommand {
     Supply {
         print_accounts: bool,
     },
+    Sysvar {
+        sysvar_kind: SysvarKind,
+    },
     TotalSupply,
     TransactionHistory {
         address: Pubkey,
@@ -633,6 +636,13 @@ pub fn parse_command(
         ("validators", Some(matches)) => parse_show_validators(matches),
         ("transaction-history", Some(matches)) => {
             parse_transaction_history(matches, wallet_manager)
+        }
+        ("sysvar", Some(matches)) => {
+            let sysvar_kind = SysvarKind::from_str(matches.value_of("sysvar").unwrap()).unwrap();
+            Ok(CliCommandInfo {
+                command: CliCommand::Sysvar { sysvar_kind },
+                signers: vec![],
+            })
         }
         // Nonce Commands
         ("authorize-nonce-account", Some(matches)) => {
@@ -1304,6 +1314,9 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
             *limit,
             *show_transactions,
         ),
+        CliCommand::Sysvar { sysvar_kind } => {
+            process_show_sysvar(&rpc_client, config, *sysvar_kind)
+        }
 
         // Nonce Commands
 

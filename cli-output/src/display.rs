@@ -8,7 +8,7 @@ use {
         program_utils::limited_deserialize, transaction::Transaction,
     },
     solana_transaction_status::UiTransactionStatusMeta,
-    std::{collections::HashMap, fmt, io},
+    std::{collections::HashMap, convert::AsRef, fmt, io},
 };
 
 #[derive(Clone, Debug)]
@@ -80,13 +80,14 @@ pub fn println_name_value(name: &str, value: &str) {
     println!("{} {}", style(name).bold(), styled_value);
 }
 
-pub fn writeln_name_value(f: &mut dyn fmt::Write, name: &str, value: &str) -> fmt::Result {
+pub fn writeln_name_value<N: AsRef<str>, V: AsRef<str>>(f: &mut dyn fmt::Write, name: N, value: V) -> fmt::Result {
+    let value = value.as_ref();
     let styled_value = if value.is_empty() {
         style("(not set)").italic()
     } else {
         style(value)
     };
-    writeln!(f, "{} {}", style(name).bold(), styled_value)
+    writeln!(f, "{} {}", style(name.as_ref()).bold(), styled_value)
 }
 
 pub fn format_labeled_address(pubkey: &str, address_labels: &HashMap<String, String>) -> String {

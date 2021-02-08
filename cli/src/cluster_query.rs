@@ -35,9 +35,9 @@ use solana_remote_wallet::remote_wallet::RemoteWalletManager;
 use solana_sdk::{
     account::from_account,
     account_utils::StateMut,
-    clock::{self, Clock, Slot},
+    clock::{self, Clock, Epoch, Slot},
     commitment_config::CommitmentConfig,
-    epoch_schedule::Epoch,
+    epoch_schedule::EpochSchedule,
     hash::Hash,
     message::Message,
     native_token::lamports_to_sol,
@@ -48,6 +48,7 @@ use solana_sdk::{
     system_instruction, system_program,
     sysvar::{
         self,
+        recent_blockhashes::RecentBlockhashes,
         stake_history::{self},
     },
     timing,
@@ -396,6 +397,17 @@ impl ClusterQuerySubCommands for App<'_, '_> {
                         .long("lamports")
                         .takes_value(false)
                         .help("Display rent in lamports instead of SOL"),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("sysvar")
+                .about("Displays contents of sysvar accounts")
+                .arg(
+                    Arg::with_name("sysvar")
+                        .index(1)
+                        .value_name("SYSVAR")
+                        .required(true)
+                        .help("Specify the sysvar to be displayed"),
                 ),
         )
     }
@@ -1910,6 +1922,69 @@ pub fn process_calculate_rent(
     };
 
     Ok(config.output_format.formatted_string(&cli_rent_calculation))
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum SysvarKind {
+    Clock,
+    EpochSchedule,
+    Fees,
+    RecentBlockhashes,
+    Rent,
+    Rewards,
+    SlotHashes,
+    SlotHistory,
+    StakeHistory,
+}
+
+#[derive(Debug)]
+pub struct SysvarKindFromStrError(pub String);
+
+impl fmt::Display for SysvarKindFromStrError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "cannot convert value to SysvarKind: \"{}\"", self.0)
+    }
+}
+
+impl std::error::Error for SysvarKindFromStrError {}
+
+impl std::str::FromStr for SysvarKind {
+    type Err = SysvarKindFromStrError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "clock" => Ok(Self::Clock),
+            "epochschedule" => Ok(Self::EpochSchedule),
+            "fees" => Ok(Self::Fees),
+            "recentblockhashes" => Ok(Self::RecentBlockhashes),
+            "rent" => Ok(Self::Rent),
+            "rewards" => Ok(Self::Rewards),
+            "slothashes" => Ok(Self::SlotHashes),
+            "slothistory" => Ok(Self::SlotHistory),
+            "stakehistory" => Ok(Self::StakeHistory),
+            _ => Err(SysvarKindFromStrError(s.to_string())),
+        }
+    }
+}
+
+fn do_show_sysvar<T, S>(rpc_client: &RpcClient, config: &CliConfig, address: &Pubkey) -> ProcessResult
+where
+    T: Into<S> + serde::de::DeserializeOwned,
+    S: Serialize + fmt::Display + QuietDisplay + VerboseDisplay,
+{
+    let account = rpc_client.get_account(address)?;
+    let state: T = account.deserialize_data()?;
+    let sysvar: S = state.into();
+    Ok(config.output_format.formatted_string(&sysvar))
+}
+
+pub fn process_show_sysvar(rpc_client: &RpcClient, config: &CliConfig, sysvar_kind: SysvarKind) -> ProcessResult {
+    match sysvar_kind {
+        SysvarKind::Clock => do_show_sysvar::<Clock, CliClockSysvar>(rpc_client, config, &sysvar::clock::id()),
+        SysvarKind::EpochSchedule => do_show_sysvar::<EpochSchedule, CliEpochScheduleSysvar>(rpc_client, config, &sysvar::epoch_schedule::id()),
+        SysvarKind::Fees => do_show_sysvar::<sysvar::fees::Fees, CliFeesSysvar>(rpc_client, config, &sysvar::fees::id()),
+        SysvarKind::RecentBlockhashes => do_show_sysvar::<RecentBlockhashes, CliRecentBlockhashes>(rpc_client, config, &sysvar::recent_blockhashes::id()),
+        _ => Err("Unimplemented".to_string().into())
+    }
 }
 
 #[cfg(test)]

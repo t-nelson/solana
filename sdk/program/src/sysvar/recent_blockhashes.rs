@@ -54,7 +54,7 @@ impl<'a> PartialOrd for IterItem<'a> {
 
 #[repr(C)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct RecentBlockhashes(Vec<Entry>);
+pub struct RecentBlockhashes(pub Vec<Entry>);
 
 impl Default for RecentBlockhashes {
     fn default() -> Self {

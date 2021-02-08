@@ -19,11 +19,14 @@ use {
     solana_sdk::{
         clock::{self, Epoch, Slot, UnixTimestamp},
         epoch_info::EpochInfo,
+        epoch_schedule,
+        fee_calculator::FeeCalculator,
         hash::Hash,
         native_token::lamports_to_sol,
         pubkey::Pubkey,
         signature::Signature,
         stake_history::StakeHistoryEntry,
+        sysvar::self,
         transaction::Transaction,
     },
     solana_stake_program::stake_state::{Authorized, Lockup},
@@ -33,6 +36,7 @@ use {
     },
     std::{
         collections::{BTreeMap, HashMap},
+        convert::From,
         fmt,
         str::FromStr,
         time::Duration,
@@ -1688,6 +1692,160 @@ impl fmt::Display for CliSignatureVerificationStatus {
         }
     }
 }
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CliClockSysvar {
+    pub slot: Slot,
+    pub epoch_start_timestamp: UnixTimestamp,
+    pub epoch: Epoch,
+    pub leader_schedule_epoch: Epoch,
+    pub unix_timestamp: UnixTimestamp,
+}
+
+impl From<clock::Clock> for CliClockSysvar {
+    fn from(clock: clock::Clock) -> Self {
+        let clock::Clock { slot, epoch_start_timestamp, epoch, leader_schedule_epoch, unix_timestamp } = clock;
+        Self { slot, epoch_start_timestamp, epoch, leader_schedule_epoch, unix_timestamp }
+    }
+}
+
+impl fmt::Display for CliClockSysvar {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln_name_value(f, "Slot:", self.slot.to_string())?;
+        writeln_name_value(f, "Epoch:", self.epoch.to_string())?;
+        writeln_name_value(f, "Date:", unix_timestamp_to_string(self.unix_timestamp))?;
+        writeln_name_value(f, "Epoch Start Date:", unix_timestamp_to_string(self.epoch_start_timestamp))?;
+        writeln_name_value(f, "Leader Schedule Epoch:", self.leader_schedule_epoch.to_string())
+    }
+}
+impl QuietDisplay for CliClockSysvar {}
+impl VerboseDisplay for CliClockSysvar {}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CliEpochScheduleSysvar {
+    pub slots_per_epoch: u64,
+    pub leader_schedule_slot_offset: u64,
+    pub warmup: bool,
+    pub first_normal_epoch: Epoch,
+    pub first_normal_slot: Slot,
+}
+
+impl From<epoch_schedule::EpochSchedule> for CliEpochScheduleSysvar {
+    fn from(epoch_schedule: epoch_schedule::EpochSchedule) -> Self {
+        let epoch_schedule::EpochSchedule { slots_per_epoch, leader_schedule_slot_offset, warmup, first_normal_epoch, first_normal_slot } = epoch_schedule;
+        Self { slots_per_epoch, leader_schedule_slot_offset, warmup, first_normal_epoch, first_normal_slot }
+    }
+}
+
+impl fmt::Display for CliEpochScheduleSysvar {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln_name_value(f, "Slots Per Epoch:", self.slots_per_epoch.to_string())?;
+        writeln_name_value(f, "Leader Schedule Slot Offset:", self.leader_schedule_slot_offset.to_string())?;
+        writeln_name_value(f, "Warmup:", self.warmup.to_string())?;
+        if self.warmup {
+            writeln_name_value(f, "First Normal Epoch:", self.first_normal_epoch.to_string())?;
+            writeln_name_value(f, "First Normal Slot:", self.first_normal_slot.to_string())?;
+        }
+        Ok(())
+    }
+}
+impl QuietDisplay for CliEpochScheduleSysvar {}
+impl VerboseDisplay for CliEpochScheduleSysvar {}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CliFeeCalculator {
+    pub lamports_per_signature: u64,
+    #[serde(skip)]
+    pub use_lamports_unit: bool,
+}
+
+impl From<FeeCalculator> for CliFeeCalculator {
+    fn from(fee_calculator: FeeCalculator) -> Self {
+        Self {
+            lamports_per_signature: fee_calculator.lamports_per_signature,
+            use_lamports_unit: false,
+        }
+    }
+}
+
+impl fmt::Display for CliFeeCalculator {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln_name_value(f, "Fee Per Signature:", build_balance_message(self.lamports_per_signature, self.use_lamports_unit, true))
+    }
+}
+impl QuietDisplay for CliFeeCalculator {}
+impl VerboseDisplay for CliFeeCalculator {}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CliFeesSysvar {
+    pub fee_calculator: CliFeeCalculator,
+}
+
+impl From<sysvar::fees::Fees> for CliFeesSysvar {
+    fn from(fees: sysvar::fees::Fees) -> Self {
+        Self {
+            fee_calculator: fees.fee_calculator.into(),
+        }
+    }
+}
+
+impl fmt::Display for CliFeesSysvar {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.fee_calculator)
+    }
+}
+impl QuietDisplay for CliFeesSysvar {}
+impl VerboseDisplay for CliFeesSysvar {}
+
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CliRecentBlockhashesEntry {
+    pub blockhash: Hash,
+    pub fee_calculator: CliFeeCalculator,
+}
+
+impl From<sysvar::recent_blockhashes::Entry> for CliRecentBlockhashesEntry {
+    fn from(entry: sysvar::recent_blockhashes::Entry) -> Self {
+        Self {
+            blockhash: entry.blockhash,
+            fee_calculator: entry.fee_calculator.into(),
+        }
+    }
+}
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CliRecentBlockhashes(Vec<CliRecentBlockhashesEntry>);
+
+impl From<sysvar::recent_blockhashes::RecentBlockhashes> for CliRecentBlockhashes {
+    fn from(recent_blockhashes: sysvar::recent_blockhashes::RecentBlockhashes) -> Self {
+        //let sysvar::recent_blockhashes::RecentBlockhashes(mut entries) = recent_blockhashes;
+        let mut cli_entries = Vec::new();
+        //for e in entries.into_iter() {
+        for e in recent_blockhashes.0.into_iter() {//entries.into_iter() {
+            cli_entries.push(e.into());
+        }
+        Self(cli_entries)
+    }
+}
+
+impl fmt::Display for CliRecentBlockhashes {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "{}", style(format!("{:<44}  {}", "Recent Blockhash", "Fees Per Signature")).bold())?;
+        for i in &self.0 {
+            let fees = build_balance_message(i.fee_calculator.lamports_per_signature, i.fee_calculator.use_lamports_unit, true);
+            writeln!(f, "{:<44}  {}", i.blockhash.to_string(), fees)?;
+        }
+        Ok(())
+    }
+}
+impl QuietDisplay for CliRecentBlockhashes {}
+impl VerboseDisplay for CliRecentBlockhashes {}
 
 #[cfg(test)]
 mod tests {
