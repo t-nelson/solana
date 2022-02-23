@@ -9,7 +9,7 @@ use {
     solana_sdk::{
         feature_set, instruction::InstructionError, pubkey::Pubkey, stake, system_program,
     },
-    std::fmt,
+    std::{fmt, ops::Deref},
 };
 
 fn process_instruction_with_program_logging(
@@ -108,7 +108,7 @@ pub enum BuiltinAction {
 /// State transition enum used for adding and removing builtin programs through
 /// feature activations.
 #[derive(Debug, Clone, AbiExample)]
-pub enum BuiltinFeatureTransition {
+pub enum InnerBuiltinFeatureTransition {
     /// Add a builtin program if a feature is activated.
     Add {
         builtin: Builtin,
@@ -121,6 +121,15 @@ pub enum BuiltinFeatureTransition {
         addition_feature_id: Pubkey,
         removal_feature_id: Pubkey,
     },
+}
+
+#[derive(Clone, Debug)]
+pub struct BuiltinFeatureTransition(InnerBuiltinFeatureTransition);
+impl Deref for BuiltinFeatureTransition {
+    type Target = InnerBuiltinFeatureTransition;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 // https://github.com/solana-labs/solana/pull/23233 added `BuiltinFeatureTransition`
@@ -141,7 +150,14 @@ pub enum BuiltinFeatureTransition {
 unsafe impl Send for BuiltinFeatureTransition {}
 unsafe impl Sync for BuiltinFeatureTransition {}
 
-impl BuiltinFeatureTransition {
+// The following trait bounds ensure that the above unsafe trait implementations
+// won't allow undefined behavior to be introduced.
+#[cfg(debug_assertions)]
+trait AutoSendSync: Send + Sync {}
+#[cfg(debug_assertions)]
+impl AutoSendSync for InnerBuiltinFeatureTransition {}
+
+impl InnerBuiltinFeatureTransition {
     pub fn to_action(
         &self,
         should_apply_action_for_feature: &impl Fn(&Pubkey) -> bool,
@@ -213,15 +229,15 @@ fn dummy_process_instruction(
 /// Dynamic feature transitions for builtin programs
 fn builtin_feature_transitions() -> Vec<BuiltinFeatureTransition> {
     vec![
-        BuiltinFeatureTransition::Add {
+        BuiltinFeatureTransition(InnerBuiltinFeatureTransition::Add {
             builtin: Builtin::new(
                 "compute_budget_program",
                 solana_sdk::compute_budget::id(),
                 solana_compute_budget_program::process_instruction,
             ),
             feature_id: feature_set::add_compute_budget_program::id(),
-        },
-        BuiltinFeatureTransition::RemoveOrRetain {
+        }),
+        BuiltinFeatureTransition(InnerBuiltinFeatureTransition::RemoveOrRetain {
             previously_added_builtin: Builtin::new(
                 "secp256k1_program",
                 solana_sdk::secp256k1_program::id(),
@@ -229,8 +245,8 @@ fn builtin_feature_transitions() -> Vec<BuiltinFeatureTransition> {
             ),
             addition_feature_id: feature_set::secp256k1_program_enabled::id(),
             removal_feature_id: feature_set::prevent_calling_precompiles_as_programs::id(),
-        },
-        BuiltinFeatureTransition::RemoveOrRetain {
+        }),
+        BuiltinFeatureTransition(InnerBuiltinFeatureTransition::RemoveOrRetain {
             previously_added_builtin: Builtin::new(
                 "ed25519_program",
                 solana_sdk::ed25519_program::id(),
@@ -238,23 +254,23 @@ fn builtin_feature_transitions() -> Vec<BuiltinFeatureTransition> {
             ),
             addition_feature_id: feature_set::ed25519_program_enabled::id(),
             removal_feature_id: feature_set::prevent_calling_precompiles_as_programs::id(),
-        },
-        BuiltinFeatureTransition::Add {
+        }),
+        BuiltinFeatureTransition(InnerBuiltinFeatureTransition::Add {
             builtin: Builtin::new(
                 "address_lookup_table_program",
                 solana_address_lookup_table_program::id(),
                 solana_address_lookup_table_program::processor::process_instruction,
             ),
             feature_id: feature_set::versioned_tx_message_enabled::id(),
-        },
-        BuiltinFeatureTransition::Add {
+        }),
+        BuiltinFeatureTransition(InnerBuiltinFeatureTransition::Add {
             builtin: Builtin::new(
                 "zk_token_proof_program",
                 solana_zk_token_sdk::zk_token_proof_program::id(),
                 with_program_logging!(solana_zk_token_proof_program::process_instruction),
             ),
             feature_id: feature_set::zk_token_sdk_enabled::id(),
-        },
+        }),
     ]
 }
 
