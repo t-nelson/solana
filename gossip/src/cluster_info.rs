@@ -63,7 +63,7 @@ use {
         hash::Hash,
         pubkey::Pubkey,
         quic::QUIC_PORT_OFFSET,
-        sanitize::{Sanitize, SanitizeError},
+        sanitize::{Sanitize, SantizeConfig, SanitizeError},
         signature::{Keypair, Signable, Signature, Signer},
         timing::timestamp,
         transaction::Transaction,
@@ -210,7 +210,7 @@ impl PruneData {
 }
 
 impl Sanitize for PruneData {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, _config: SanitizeConfig) -> Result<(), SanitizeError> {
         if self.wallclock >= MAX_WALLCLOCK {
             return Err(SanitizeError::ValueOutOfBounds);
         }
@@ -350,23 +350,23 @@ impl Protocol {
 }
 
 impl Sanitize for Protocol {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SantizeConfig) -> Result<(), SanitizeError> {
         match self {
             Protocol::PullRequest(filter, val) => {
                 filter.sanitize()?;
-                val.sanitize()
+                val.sanitize(config)
             }
-            Protocol::PullResponse(_, val) => val.sanitize(),
-            Protocol::PushMessage(_, val) => val.sanitize(),
+            Protocol::PullResponse(_, val) => val.sanitize(config),
+            Protocol::PushMessage(_, val) => val.sanitize(config),
             Protocol::PruneMessage(from, val) => {
                 if *from != val.pubkey {
                     Err(SanitizeError::InvalidValue)
                 } else {
-                    val.sanitize()
+                    val.sanitize(config)
                 }
             }
-            Protocol::PingMessage(ping) => ping.sanitize(),
-            Protocol::PongMessage(pong) => pong.sanitize(),
+            Protocol::PingMessage(ping) => ping.sanitize(config),
+            Protocol::PongMessage(pong) => pong.sanitize(config),
         }
     }
 }

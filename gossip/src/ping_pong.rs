@@ -6,7 +6,7 @@ use {
     solana_sdk::{
         hash::{self, Hash},
         pubkey::Pubkey,
-        sanitize::{Sanitize, SanitizeError},
+        sanitize::{Sanitize, SanitizeConfig, SanitizeError},
         signature::{Keypair, Signable, Signature, Signer},
     },
     std::{
@@ -77,11 +77,11 @@ where
 }
 
 impl<T> Sanitize for Ping<T> {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
-        self.from.sanitize()?;
+    fn sanitize(&self, config: SantitizeConfig) -> Result<(), SanitizeError> {
+        self.from.sanitize(config)?;
         // TODO Add self.token.sanitize()?; when rust's
         // specialization feature becomes stable.
-        self.signature.sanitize()
+        self.signature.sanitize(config)
     }
 }
 
@@ -121,10 +121,10 @@ impl Pong {
 }
 
 impl Sanitize for Pong {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
-        self.from.sanitize()?;
-        self.hash.sanitize()?;
-        self.signature.sanitize()
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
+        self.from.sanitize(config)?;
+        self.hash.sanitize(config)?;
+        self.signature.sanitize(config)
     }
 }
 
@@ -284,15 +284,16 @@ mod tests {
 
     #[test]
     fn test_ping_pong() {
+        let sc = SanitizeConfig::default();
         let mut rng = rand::thread_rng();
         let keypair = Keypair::new();
         let ping = Ping::<Token>::new_rand(&mut rng, &keypair).unwrap();
         assert!(ping.verify());
-        assert!(ping.sanitize().is_ok());
+        assert!(ping.sanitize(sc).is_ok());
 
         let pong = Pong::new(&ping, &keypair).unwrap();
         assert!(pong.verify());
-        assert!(pong.sanitize().is_ok());
+        assert!(pong.sanitize(sc).is_ok());
         assert_eq!(
             hash::hashv(&[PING_PONG_HASH_PREFIX, &ping.token]),
             pong.hash

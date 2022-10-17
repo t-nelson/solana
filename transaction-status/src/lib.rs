@@ -17,6 +17,7 @@ use {
             AccountKeys, Message, MessageHeader, VersionedMessage,
         },
         pubkey::Pubkey,
+        sanitize::SanitizeConfig,
         signature::Signature,
         transaction::{
             Result as TransactionResult, Transaction, TransactionError, TransactionVersion,
@@ -1092,7 +1093,7 @@ impl EncodedTransaction {
         transaction.filter(|transaction| {
             transaction
                 .sanitize(
-                    true, // require_static_program_ids
+                    SanitizeConfig { require_static_program_ids: true },
                 )
                 .is_ok()
         })

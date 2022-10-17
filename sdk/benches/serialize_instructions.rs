@@ -31,7 +31,7 @@ fn bench_bincode_instruction_serialize(b: &mut Bencher) {
 fn bench_construct_instructions_data(b: &mut Bencher) {
     let instructions = make_instructions();
     let message =
-        SanitizedMessage::try_from(Message::new(&instructions, Some(&Pubkey::new_unique())))
+        SanitizedMessage::try_from_legacy_message(Message::new(&instructions, Some(&Pubkey::new_unique())))
             .unwrap();
     b.iter(|| {
         let instructions = message.decompile_instructions();
@@ -52,7 +52,7 @@ fn bench_bincode_instruction_deserialize(b: &mut Bencher) {
 fn bench_manual_instruction_deserialize(b: &mut Bencher) {
     let instructions = make_instructions();
     let message =
-        SanitizedMessage::try_from(Message::new(&instructions, Some(&Pubkey::new_unique())))
+        SanitizedMessage::try_from_legacy_message(Message::new(&instructions, Some(&Pubkey::new_unique())))
             .unwrap();
     let serialized = construct_instructions_data(&message.decompile_instructions());
     b.iter(|| {
@@ -67,7 +67,7 @@ fn bench_manual_instruction_deserialize(b: &mut Bencher) {
 fn bench_manual_instruction_deserialize_single(b: &mut Bencher) {
     let instructions = make_instructions();
     let message =
-        SanitizedMessage::try_from(Message::new(&instructions, Some(&Pubkey::new_unique())))
+        SanitizedMessage::try_from_legacy_message(Message::new(&instructions, Some(&Pubkey::new_unique())))
             .unwrap();
     let serialized = construct_instructions_data(&message.decompile_instructions());
     b.iter(|| {

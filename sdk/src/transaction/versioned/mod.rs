@@ -6,7 +6,7 @@ use {
     crate::{
         hash::Hash,
         message::VersionedMessage,
-        sanitize::SanitizeError,
+        sanitize::{Sanitize, SanitizeConfig, SanitizeError},
         short_vec,
         signature::Signature,
         signer::SignerError,
@@ -117,9 +117,9 @@ impl VersionedTransaction {
 
     pub fn sanitize(
         &self,
-        require_static_program_ids: bool,
+        config: SanitizeConfig,
     ) -> std::result::Result<(), SanitizeError> {
-        self.message.sanitize(require_static_program_ids)?;
+        self.message.sanitize(config)?;
         self.sanitize_signatures()?;
         Ok(())
     }

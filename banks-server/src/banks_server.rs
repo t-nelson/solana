@@ -406,7 +406,7 @@ impl Banks for BanksServer {
         message: Message,
     ) -> Option<u64> {
         let bank = self.bank(commitment);
-        let sanitized_message = SanitizedMessage::try_from(message).ok()?;
+        let sanitized_message = SanitizedMessage::try_from_legacy_message(message).ok()?;
         bank.get_fee_for_message(&sanitized_message)
     }
 }

@@ -4,7 +4,7 @@ use {
     fnv::FnvHasher,
     rand::{self, Rng},
     serde::{Deserialize, Serialize},
-    solana_sdk::sanitize::{Sanitize, SanitizeError},
+    solana_sdk::sanitize::{Sanitize, SanitizeConfig, SanitizeError},
     std::{
         cmp, fmt,
         hash::Hasher,
@@ -52,7 +52,7 @@ impl<T: BloomHashIndex> fmt::Debug for Bloom<T> {
 }
 
 impl<T: BloomHashIndex> Sanitize for Bloom<T> {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, _config: SanitizeConfig) -> Result<(), SanitizeError> {
         // Avoid division by zero in self.pos(...).
         if self.bits.is_empty() {
             Err(SanitizeError::InvalidValue)

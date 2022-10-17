@@ -12,7 +12,7 @@ use {
         },
         precompiles::verify_if_precompile,
         pubkey::Pubkey,
-        sanitize::Sanitize,
+        sanitize::{Sanitize, SanitizeConfig},
         signature::Signature,
         solana_sdk::feature_set,
         transaction::{Result, Transaction, TransactionError, VersionedTransaction},
@@ -95,9 +95,9 @@ impl SanitizedTransaction {
         message_hash: impl Into<MessageHash>,
         is_simple_vote_tx: Option<bool>,
         address_loader: impl AddressLoader,
-        require_static_program_ids: bool,
+        sanitize_config: SanitizeConfig,
     ) -> Result<Self> {
-        tx.sanitize(require_static_program_ids)?;
+        tx.sanitize(sanitize_config)?;
 
         let message_hash = match message_hash.into() {
             MessageHash::Compute => tx.message.hash(),
@@ -130,8 +130,8 @@ impl SanitizedTransaction {
         })
     }
 
-    pub fn try_from_legacy_transaction(tx: Transaction) -> Result<Self> {
-        tx.sanitize()?;
+    pub fn try_from_legacy_transaction(tx: Transaction, sanitize_config: SanitizeConfig) -> Result<Self> {
+        tx.sanitize(sanitize_config)?;
 
         Ok(Self {
             message_hash: tx.message.hash(),
@@ -142,8 +142,8 @@ impl SanitizedTransaction {
     }
 
     /// Create a sanitized transaction from a legacy transaction. Used for tests only.
-    pub fn from_transaction_for_tests(tx: Transaction) -> Self {
-        Self::try_from_legacy_transaction(tx).unwrap()
+    pub fn from_transaction_for_tests(tx: Transaction, sanitize_config: SanitizeConfig) -> Self {
+        Self::try_from_legacy_transaction(tx, sanitize_config).unwrap()
     }
 
     /// Return the first signature for this transaction.

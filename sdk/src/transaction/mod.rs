@@ -120,7 +120,7 @@ use {
         precompiles::verify_if_precompile,
         program_utils::limited_deserialize,
         pubkey::Pubkey,
-        sanitize::{Sanitize, SanitizeError},
+        sanitize::{Sanitize, SanitizeConfig, SanitizeError},
         short_vec,
         signature::{Signature, SignerError},
         signers::Signers,
@@ -190,14 +190,14 @@ pub struct Transaction {
 }
 
 impl Sanitize for Transaction {
-    fn sanitize(&self) -> std::result::Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> std::result::Result<(), SanitizeError> {
         if self.message.header.num_required_signatures as usize > self.signatures.len() {
             return Err(SanitizeError::IndexOutOfBounds);
         }
         if self.signatures.len() > self.message.account_keys.len() {
             return Err(SanitizeError::IndexOutOfBounds);
         }
-        self.message.sanitize()
+        self.message.sanitize(config)
     }
 }
 
@@ -1149,7 +1149,7 @@ mod tests {
             vec![prog1, prog2],
             instructions,
         );
-        assert!(tx.sanitize().is_ok());
+        assert!(tx.sanitize(SanitizeConfig::default()).is_ok());
 
         assert_eq!(tx.key(0, 0), Some(&key.pubkey()));
         assert_eq!(tx.signer_key(0, 0), Some(&key.pubkey()));
@@ -1184,7 +1184,7 @@ mod tests {
             vec![],
             instructions,
         );
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(SanitizeConfig::default()), Err(SanitizeError::IndexOutOfBounds));
     }
     #[test]
     fn test_refs_invalid_account() {
@@ -1198,11 +1198,12 @@ mod tests {
             instructions,
         );
         assert_eq!(*get_program_id(&tx, 0), Pubkey::default());
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(SanitizeConfig::default()), Err(SanitizeError::IndexOutOfBounds));
     }
 
     #[test]
     fn test_sanitize_txs() {
+        let sc = SanitizeConfig::default();
         let key = Keypair::new();
         let id0 = Pubkey::default();
         let program_id = solana_sdk::pubkey::new_rand();
@@ -1216,50 +1217,50 @@ mod tests {
         );
         let mut tx = Transaction::new_with_payer(&[ix], Some(&key.pubkey()));
         let o = tx.clone();
-        assert_eq!(tx.sanitize(), Ok(()));
+        assert_eq!(tx.sanitize(sc), Ok(()));
         assert_eq!(tx.message.account_keys.len(), 3);
 
         tx = o.clone();
         tx.message.header.num_required_signatures = 3;
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(sc), Err(SanitizeError::IndexOutOfBounds));
 
         tx = o.clone();
         tx.message.header.num_readonly_signed_accounts = 4;
         tx.message.header.num_readonly_unsigned_accounts = 0;
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(sc), Err(SanitizeError::IndexOutOfBounds));
 
         tx = o.clone();
         tx.message.header.num_readonly_signed_accounts = 2;
         tx.message.header.num_readonly_unsigned_accounts = 2;
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(sc), Err(SanitizeError::IndexOutOfBounds));
 
         tx = o.clone();
         tx.message.header.num_readonly_signed_accounts = 0;
         tx.message.header.num_readonly_unsigned_accounts = 4;
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(sc), Err(SanitizeError::IndexOutOfBounds));
 
         tx = o.clone();
         tx.message.instructions[0].program_id_index = 3;
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(sc), Err(SanitizeError::IndexOutOfBounds));
 
         tx = o.clone();
         tx.message.instructions[0].accounts[0] = 3;
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(sc), Err(SanitizeError::IndexOutOfBounds));
 
         tx = o.clone();
         tx.message.instructions[0].program_id_index = 0;
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(sc), Err(SanitizeError::IndexOutOfBounds));
 
         tx = o.clone();
         tx.message.header.num_readonly_signed_accounts = 2;
         tx.message.header.num_readonly_unsigned_accounts = 3;
         tx.message.account_keys.resize(4, Pubkey::default());
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(sc), Err(SanitizeError::IndexOutOfBounds));
 
         tx = o;
         tx.message.header.num_readonly_signed_accounts = 2;
         tx.message.header.num_required_signatures = 1;
-        assert_eq!(tx.sanitize(), Err(SanitizeError::IndexOutOfBounds));
+        assert_eq!(tx.sanitize(sc), Err(SanitizeError::IndexOutOfBounds));
     }
 
     fn create_sample_transaction() -> Transaction {

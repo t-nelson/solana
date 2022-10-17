@@ -2,6 +2,19 @@
 
 use thiserror::Error;
 
+#[derive(Clone, Copy, Debug)]
+pub struct SanitizeConfig {
+    pub require_static_program_ids: bool
+}
+
+impl Default for SanitizeConfig {
+    fn default() -> Self {
+        Self {
+            require_static_program_ids: false,
+        }
+    }
+}
+
 #[derive(PartialEq, Debug, Error, Eq, Clone)]
 pub enum SanitizeError {
     #[error("index out of bounds")]
@@ -22,15 +35,15 @@ pub enum SanitizeError {
 /// - All index values are in range.
 /// - All values are within their static max/min bounds.
 pub trait Sanitize {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, _config: SanitizeConfig) -> Result<(), SanitizeError> {
         Ok(())
     }
 }
 
 impl<T: Sanitize> Sanitize for Vec<T> {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         for x in self.iter() {
-            x.sanitize()?;
+            x.sanitize(config)?;
         }
         Ok(())
     }

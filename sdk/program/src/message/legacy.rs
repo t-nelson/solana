@@ -18,7 +18,7 @@ use {
         instruction::{CompiledInstruction, Instruction},
         message::{CompiledKeys, MessageHeader},
         pubkey::Pubkey,
-        sanitize::{Sanitize, SanitizeError},
+        sanitize::{Sanitize, SanitizeConfig, SanitizeError},
         short_vec, system_instruction, system_program, sysvar, wasm_bindgen,
     },
     lazy_static::lazy_static,
@@ -129,7 +129,7 @@ pub struct Message {
 }
 
 impl Sanitize for Message {
-    fn sanitize(&self) -> std::result::Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> std::result::Result<(), SanitizeError> {
         // signing area and read-only non-signing area should not overlap
         if self.header.num_required_signatures as usize
             + self.header.num_readonly_unsigned_accounts as usize
@@ -157,9 +157,9 @@ impl Sanitize for Message {
                 }
             }
         }
-        self.account_keys.sanitize()?;
-        self.recent_blockhash.sanitize()?;
-        self.instructions.sanitize()?;
+        self.account_keys.sanitize(config)?;
+        self.recent_blockhash.sanitize(config)?;
+        self.instructions.sanitize(config)?;
         Ok(())
     }
 }

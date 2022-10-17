@@ -1774,7 +1774,7 @@ mod tests {
         );
 
         let fee = Bank::calculate_fee(
-            &SanitizedMessage::try_from(tx.message().clone()).unwrap(),
+            &SanitizedMessage::try_from_legacy_message(tx.message().clone()).unwrap(),
             lamports_per_signature,
             &FeeStructure::default(),
             true,

@@ -14,7 +14,7 @@ use {
         clock::Slot,
         hash::Hash,
         pubkey::{self, Pubkey},
-        sanitize::{Sanitize, SanitizeError},
+        sanitize::{Sanitize, SanitizeConfig, SanitizeError},
         signature::{Keypair, Signable, Signature, Signer},
         timing::timestamp,
         transaction::Transaction,
@@ -46,9 +46,9 @@ pub struct CrdsValue {
 }
 
 impl Sanitize for CrdsValue {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
-        self.signature.sanitize()?;
-        self.data.sanitize()
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
+        self.signature.sanitize(config)?;
+        self.data.sanitize(config)
     }
 }
 
@@ -95,40 +95,40 @@ pub enum CrdsData {
 }
 
 impl Sanitize for CrdsData {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         match self {
-            CrdsData::ContactInfo(val) => val.sanitize(),
+            CrdsData::ContactInfo(val) => val.sanitize(config),
             CrdsData::Vote(ix, val) => {
                 if *ix >= MAX_VOTES {
                     return Err(SanitizeError::ValueOutOfBounds);
                 }
-                val.sanitize()
+                val.sanitize(config)
             }
             CrdsData::LowestSlot(ix, val) => {
                 if *ix as usize >= 1 {
                     return Err(SanitizeError::ValueOutOfBounds);
                 }
-                val.sanitize()
+                val.sanitize(config)
             }
-            CrdsData::SnapshotHashes(val) => val.sanitize(),
-            CrdsData::AccountsHashes(val) => val.sanitize(),
+            CrdsData::SnapshotHashes(val) => val.sanitize(config),
+            CrdsData::AccountsHashes(val) => val.sanitize(config),
             CrdsData::EpochSlots(ix, val) => {
                 if *ix as usize >= MAX_EPOCH_SLOTS as usize {
                     return Err(SanitizeError::ValueOutOfBounds);
                 }
-                val.sanitize()
+                val.sanitize(config)
             }
-            CrdsData::LegacyVersion(version) => version.sanitize(),
-            CrdsData::Version(version) => version.sanitize(),
-            CrdsData::NodeInstance(node) => node.sanitize(),
+            CrdsData::LegacyVersion(version) => version.sanitize(config),
+            CrdsData::Version(version) => version.sanitize(config),
+            CrdsData::NodeInstance(node) => node.sanitize(config),
             CrdsData::DuplicateShred(ix, shred) => {
                 if *ix >= MAX_DUPLICATE_SHREDS {
                     Err(SanitizeError::ValueOutOfBounds)
                 } else {
-                    shred.sanitize()
+                    shred.sanitize(config)
                 }
             }
-            CrdsData::IncrementalSnapshotHashes(val) => val.sanitize(),
+            CrdsData::IncrementalSnapshotHashes(val) => val.sanitize(config),
         }
     }
 }
@@ -169,14 +169,14 @@ pub struct SnapshotHashes {
 }
 
 impl Sanitize for SnapshotHashes {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         sanitize_wallclock(self.wallclock)?;
         for (slot, _) in &self.hashes {
             if *slot >= MAX_SLOT {
                 return Err(SanitizeError::ValueOutOfBounds);
             }
         }
-        self.from.sanitize()
+        self.from.sanitize(config)
     }
 }
 
@@ -216,7 +216,7 @@ pub struct IncrementalSnapshotHashes {
 }
 
 impl Sanitize for IncrementalSnapshotHashes {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         sanitize_wallclock(self.wallclock)?;
         if self.base.0 >= MAX_SLOT {
             return Err(SanitizeError::ValueOutOfBounds);
@@ -229,7 +229,7 @@ impl Sanitize for IncrementalSnapshotHashes {
                 return Err(SanitizeError::InvalidValue);
             }
         }
-        self.from.sanitize()
+        self.from.sanitize(config)
     }
 }
 
@@ -269,7 +269,7 @@ impl LowestSlot {
 }
 
 impl Sanitize for LowestSlot {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         sanitize_wallclock(self.wallclock)?;
         if self.lowest >= MAX_SLOT {
             return Err(SanitizeError::ValueOutOfBounds);
@@ -283,7 +283,7 @@ impl Sanitize for LowestSlot {
         if !self.stash.is_empty() {
             return Err(SanitizeError::InvalidValue);
         }
-        self.from.sanitize()
+        self.from.sanitize(config)
     }
 }
 
@@ -297,10 +297,10 @@ pub struct Vote {
 }
 
 impl Sanitize for Vote {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         sanitize_wallclock(self.wallclock)?;
-        self.from.sanitize()?;
-        self.transaction.sanitize()
+        self.from.sanitize(config)?;
+        self.transaction.sanitize(config)
     }
 }
 
@@ -362,10 +362,10 @@ pub struct LegacyVersion {
 }
 
 impl Sanitize for LegacyVersion {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         sanitize_wallclock(self.wallclock)?;
-        self.from.sanitize()?;
-        self.version.sanitize()
+        self.from.sanitize(config)?;
+        self.version.sanitize(config)
     }
 }
 
@@ -377,10 +377,10 @@ pub struct Version {
 }
 
 impl Sanitize for Version {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         sanitize_wallclock(self.wallclock)?;
-        self.from.sanitize()?;
-        self.version.sanitize()
+        self.from.sanitize(config)?;
+        self.version.sanitize(config)
     }
 }
 
@@ -470,9 +470,9 @@ impl NodeInstance {
 }
 
 impl Sanitize for NodeInstance {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         sanitize_wallclock(self.wallclock)?;
-        self.from.sanitize()
+        self.from.sanitize(config)
     }
 }
 
@@ -726,28 +726,29 @@ mod test {
 
     #[test]
     fn test_lowest_slot_sanitize() {
+        let sc = SanitizeConfig::default();
         let ls = LowestSlot::new(Pubkey::default(), 0, 0);
         let v = CrdsValue::new_unsigned(CrdsData::LowestSlot(0, ls.clone()));
-        assert_eq!(v.sanitize(), Ok(()));
+        assert_eq!(v.sanitize(sc), Ok(()));
 
         let mut o = ls.clone();
         o.root = 1;
         let v = CrdsValue::new_unsigned(CrdsData::LowestSlot(0, o));
-        assert_eq!(v.sanitize(), Err(SanitizeError::InvalidValue));
+        assert_eq!(v.sanitize(sc), Err(SanitizeError::InvalidValue));
 
         let o = ls.clone();
         let v = CrdsValue::new_unsigned(CrdsData::LowestSlot(1, o));
-        assert_eq!(v.sanitize(), Err(SanitizeError::ValueOutOfBounds));
+        assert_eq!(v.sanitize(sc), Err(SanitizeError::ValueOutOfBounds));
 
         let mut o = ls.clone();
         o.slots.insert(1);
         let v = CrdsValue::new_unsigned(CrdsData::LowestSlot(0, o));
-        assert_eq!(v.sanitize(), Err(SanitizeError::InvalidValue));
+        assert_eq!(v.sanitize(sc), Err(SanitizeError::InvalidValue));
 
         let mut o = ls;
         o.stash.push(deprecated::EpochIncompleteSlots::default());
         let v = CrdsValue::new_unsigned(CrdsData::LowestSlot(0, o));
-        assert_eq!(v.sanitize(), Err(SanitizeError::InvalidValue));
+        assert_eq!(v.sanitize(sc), Err(SanitizeError::InvalidValue));
     }
 
     #[test]
@@ -776,7 +777,7 @@ mod test {
         let keypair = Keypair::new();
         let vote = Vote::new(keypair.pubkey(), new_test_vote_tx(&mut rng), timestamp()).unwrap();
         let vote = CrdsValue::new_signed(CrdsData::Vote(MAX_VOTES, vote), &keypair);
-        assert!(vote.sanitize().is_err());
+        assert!(vote.sanitize(SanitizeConfig::default()).is_err());
     }
 
     #[test]
@@ -822,7 +823,7 @@ mod test {
             ),
             &keypair,
         );
-        assert_eq!(item.sanitize(), Err(SanitizeError::ValueOutOfBounds));
+        assert_eq!(item.sanitize(SanitizeConfig::default()), Err(SanitizeError::ValueOutOfBounds));
     }
 
     fn serialize_deserialize_value(value: &mut CrdsValue, keypair: &Keypair) {

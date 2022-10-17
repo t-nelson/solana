@@ -4,7 +4,7 @@ use {
         instruction::CompiledInstruction,
         message::{legacy::Message as LegacyMessage, v0::MessageAddressTableLookup, MessageHeader},
         pubkey::Pubkey,
-        sanitize::{Sanitize, SanitizeError},
+        sanitize::{Sanitize, SanitizeConfig, SanitizeError},
         short_vec,
     },
     serde::{
@@ -38,14 +38,16 @@ pub enum VersionedMessage {
     V0(v0::Message),
 }
 
-impl VersionedMessage {
-    pub fn sanitize(&self, require_static_program_ids: bool) -> Result<(), SanitizeError> {
+impl Sanitize for VersionedMessage {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         match self {
-            Self::Legacy(message) => message.sanitize(),
-            Self::V0(message) => message.sanitize(require_static_program_ids),
+            Self::Legacy(message) => message.sanitize(config),
+            Self::V0(message) => message.sanitize(config),
         }
     }
+}
 
+impl VersionedMessage {
     pub fn header(&self) -> &MessageHeader {
         match self {
             Self::Legacy(message) => &message.header,

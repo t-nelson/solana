@@ -11,7 +11,7 @@ use {
         nonce::NONCED_TX_MARKER_IX_INDEX,
         program_utils::limited_deserialize,
         pubkey::Pubkey,
-        sanitize::{Sanitize, SanitizeError},
+        sanitize::{Sanitize, SanitizeConfig, SanitizeError},
         solana_program::{system_instruction::SystemInstruction, system_program},
         sysvar::instructions::{BorrowedAccountMeta, BorrowedInstruction},
     },
@@ -96,14 +96,6 @@ impl From<SanitizeError> for SanitizeMessageError {
     }
 }
 
-impl TryFrom<legacy::Message> for SanitizedMessage {
-    type Error = SanitizeMessageError;
-    fn try_from(message: legacy::Message) -> Result<Self, Self::Error> {
-        message.sanitize()?;
-        Ok(Self::Legacy(LegacyMessage::new(message)))
-    }
-}
-
 impl SanitizedMessage {
     /// Create a sanitized message from a sanitized versioned message.
     /// If the input message uses address tables, attempt to look up the
@@ -122,6 +114,11 @@ impl SanitizedMessage {
                 SanitizedMessage::V0(v0::LoadedMessage::new(message, loaded_addresses))
             }
         })
+    }
+
+    pub fn try_from_legacy_message(legacy_message: legacy::Message, sanitize_config: SanitizeConfig) -> Result<Self, SanitizeMessageError> {
+        legacy_message.sanitize(sanitize_config)?;
+        Ok(Self::Legacy(LegacyMessage::new(legacy_message)))
     }
 
     /// Return true if this message contains duplicate account keys
@@ -349,7 +346,7 @@ mod tests {
         };
 
         assert_eq!(
-            SanitizedMessage::try_from(legacy_message_with_no_signers).err(),
+            SanitizedMessage::try_from_legacy_message(legacy_message_with_no_signers).err(),
             Some(SanitizeMessageError::IndexOutOfBounds),
         );
     }
@@ -364,7 +361,7 @@ mod tests {
             CompiledInstruction::new(2, &(), vec![0, 1]),
         ];
 
-        let message = SanitizedMessage::try_from(legacy::Message::new_with_compiled_instructions(
+        let message = SanitizedMessage::try_from_legacy_message(legacy::Message::new_with_compiled_instructions(
             1,
             0,
             2,
@@ -388,7 +385,7 @@ mod tests {
         let key4 = Pubkey::new_unique();
         let key5 = Pubkey::new_unique();
 
-        let legacy_message = SanitizedMessage::try_from(legacy::Message {
+        let legacy_message = SanitizedMessage::try_from_legacy_message(legacy::Message {
             header: MessageHeader {
                 num_required_signatures: 2,
                 num_readonly_signed_accounts: 1,
@@ -432,7 +429,7 @@ mod tests {
             CompiledInstruction::new(3, &(), vec![0, 0]),
         ];
 
-        let message = SanitizedMessage::try_from(legacy::Message::new_with_compiled_instructions(
+        let message = SanitizedMessage::try_from_legacy_message(legacy::Message::new_with_compiled_instructions(
             2,
             1,
             2,
@@ -470,7 +467,7 @@ mod tests {
         let key4 = Pubkey::new_unique();
         let key5 = Pubkey::new_unique();
 
-        let legacy_message = SanitizedMessage::try_from(legacy::Message {
+        let legacy_message = SanitizedMessage::try_from_legacy_message(legacy::Message {
             header: MessageHeader {
                 num_required_signatures: 2,
                 num_readonly_signed_accounts: 1,

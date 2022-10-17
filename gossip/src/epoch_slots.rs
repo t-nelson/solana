@@ -9,7 +9,7 @@ use {
     solana_sdk::{
         clock::Slot,
         pubkey::Pubkey,
-        sanitize::{Sanitize, SanitizeError},
+        sanitize::{Sanitize, SanitizeConfig, SanitizeError},
     },
 };
 
@@ -22,7 +22,7 @@ pub struct Uncompressed {
 }
 
 impl Sanitize for Uncompressed {
-    fn sanitize(&self) -> std::result::Result<(), SanitizeError> {
+    fn sanitize(&self, _config: SanitizeConfig) -> std::result::Result<(), SanitizeError> {
         if self.first_slot >= MAX_SLOT {
             return Err(SanitizeError::ValueOutOfBounds);
         }
@@ -50,7 +50,7 @@ pub struct Flate2 {
 }
 
 impl Sanitize for Flate2 {
-    fn sanitize(&self) -> std::result::Result<(), SanitizeError> {
+    fn sanitize(&self, _config: SanitizeConfig) -> std::result::Result<(), SanitizeError> {
         if self.first_slot >= MAX_SLOT {
             return Err(SanitizeError::ValueOutOfBounds);
         }
@@ -163,10 +163,10 @@ pub enum CompressedSlots {
 }
 
 impl Sanitize for CompressedSlots {
-    fn sanitize(&self) -> std::result::Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> std::result::Result<(), SanitizeError> {
         match self {
-            CompressedSlots::Uncompressed(a) => a.sanitize(),
-            CompressedSlots::Flate2(b) => b.sanitize(),
+            CompressedSlots::Uncompressed(a) => a.sanitize(config),
+            CompressedSlots::Flate2(b) => b.sanitize(config),
         }
     }
 }
@@ -232,12 +232,12 @@ pub struct EpochSlots {
 }
 
 impl Sanitize for EpochSlots {
-    fn sanitize(&self) -> std::result::Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> std::result::Result<(), SanitizeError> {
         if self.wallclock >= MAX_WALLCLOCK {
             return Err(SanitizeError::ValueOutOfBounds);
         }
-        self.from.sanitize()?;
-        self.slots.sanitize()
+        self.from.sanitize(config)?;
+        self.slots.sanitize(config)
     }
 }
 
@@ -406,6 +406,7 @@ mod tests {
 
     #[test]
     fn test_epoch_slots_sanitize() {
+        let sc = SanitizeConfig::default();
         let mut slots = Uncompressed::new(100);
         slots.add(&[1, 701, 2]);
         assert_eq!(slots.num, 701);
@@ -413,40 +414,40 @@ mod tests {
 
         let mut o = slots.clone();
         o.first_slot = MAX_SLOT;
-        assert_eq!(o.sanitize(), Err(SanitizeError::ValueOutOfBounds));
+        assert_eq!(o.sanitize(sc), Err(SanitizeError::ValueOutOfBounds));
 
         let mut o = slots.clone();
         o.num = MAX_SLOTS_PER_ENTRY;
-        assert_eq!(o.sanitize(), Err(SanitizeError::ValueOutOfBounds));
+        assert_eq!(o.sanitize(sc), Err(SanitizeError::ValueOutOfBounds));
 
         let mut o = slots.clone();
         o.slots = BitVec::new_fill(false, 7); // Length not a multiple of 8
-        assert_eq!(o.sanitize(), Err(SanitizeError::ValueOutOfBounds));
+        assert_eq!(o.sanitize(sc), Err(SanitizeError::ValueOutOfBounds));
 
         let mut o = slots.clone();
         o.slots = BitVec::with_capacity(8); // capacity() not equal to len()
-        assert_eq!(o.sanitize(), Err(SanitizeError::ValueOutOfBounds));
+        assert_eq!(o.sanitize(sc), Err(SanitizeError::ValueOutOfBounds));
 
         let compressed = Flate2::deflate(slots).unwrap();
-        assert!(compressed.sanitize().is_ok());
+        assert!(compressed.sanitize(sc).is_ok());
 
         let mut o = compressed.clone();
         o.first_slot = MAX_SLOT;
-        assert_eq!(o.sanitize(), Err(SanitizeError::ValueOutOfBounds));
+        assert_eq!(o.sanitize(sc), Err(SanitizeError::ValueOutOfBounds));
 
         let mut o = compressed;
         o.num = MAX_SLOTS_PER_ENTRY;
-        assert_eq!(o.sanitize(), Err(SanitizeError::ValueOutOfBounds));
+        assert_eq!(o.sanitize(sc), Err(SanitizeError::ValueOutOfBounds));
 
         let mut slots = EpochSlots::default();
         let range: Vec<Slot> = (0..5000).collect();
         assert_eq!(slots.fill(&range, 1), 5000);
         assert_eq!(slots.wallclock, 1);
-        assert!(slots.sanitize().is_ok());
+        assert!(slots.sanitize(sc).is_ok());
 
         let mut o = slots;
         o.wallclock = MAX_WALLCLOCK;
-        assert_eq!(o.sanitize(), Err(SanitizeError::ValueOutOfBounds));
+        assert_eq!(o.sanitize(sc), Err(SanitizeError::ValueOutOfBounds));
     }
 
     #[test]

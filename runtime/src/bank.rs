@@ -3701,7 +3701,7 @@ impl Bank {
         let transaction_account_lock_limit = self.get_transaction_account_lock_limit();
         let sanitized_txs = txs
             .into_iter()
-            .map(SanitizedTransaction::from_transaction_for_tests)
+            .map(|tx| SanitizedTransaction::from_transaction_for_tests(tx))
             .collect::<Vec<_>>();
         let lock_results = self
             .rc
@@ -10859,7 +10859,7 @@ pub(crate) mod tests {
         genesis_config.fee_rate_governor = FeeRateGovernor::new(4, 0); // something divisible by 2
 
         let expected_fee_paid = Bank::calculate_fee(
-            &SanitizedMessage::try_from(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap(),
+            &SanitizedMessage::try_from_legacy_message(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap(),
             genesis_config
                 .fee_rate_governor
                 .create_fee_calculator()
@@ -11045,7 +11045,7 @@ pub(crate) mod tests {
         assert_eq!(bank.process_transaction(&tx), Ok(()));
         assert_eq!(bank.get_balance(&key), 1);
         let cheap_fee = Bank::calculate_fee(
-            &SanitizedMessage::try_from(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap(),
+            &SanitizedMessage::try_from_legacy_message(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap(),
             cheap_lamports_per_signature,
             &FeeStructure::default(),
             true,
@@ -11065,7 +11065,7 @@ pub(crate) mod tests {
         assert_eq!(bank.process_transaction(&tx), Ok(()));
         assert_eq!(bank.get_balance(&key), 1);
         let expensive_fee = Bank::calculate_fee(
-            &SanitizedMessage::try_from(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap(),
+            &SanitizedMessage::try_from_legacy_message(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap(),
             expensive_lamports_per_signature,
             &FeeStructure::default(),
             true,
@@ -11176,7 +11176,7 @@ pub(crate) mod tests {
                     .fee_rate_governor
                     .burn(
                         Bank::calculate_fee(
-                            &SanitizedMessage::try_from(Message::new(
+                            &SanitizedMessage::try_from_legacy_message(Message::new(
                                 &[],
                                 Some(&Pubkey::new_unique())
                             ))
@@ -13446,7 +13446,7 @@ pub(crate) mod tests {
         let mut recent_message = nonce_tx.message.clone();
         recent_message.recent_blockhash = bank.last_blockhash();
         expected_balance -= bank
-            .get_fee_for_message(&SanitizedMessage::try_from(recent_message).unwrap())
+            .get_fee_for_message(&SanitizedMessage::try_from_legacy_message(recent_message).unwrap())
             .unwrap();
         assert_eq!(bank.get_balance(&custodian_pubkey), expected_balance);
         assert_ne!(
@@ -13574,7 +13574,7 @@ pub(crate) mod tests {
         let mut recent_message = nonce_tx.message.clone();
         recent_message.recent_blockhash = bank.last_blockhash();
         expected_balance -= bank
-            .get_fee_for_message(&SanitizedMessage::try_from(recent_message).unwrap())
+            .get_fee_for_message(&SanitizedMessage::try_from_legacy_message(recent_message).unwrap())
             .unwrap();
         assert_eq!(bank.get_balance(&custodian_pubkey), expected_balance);
         assert_ne!(
@@ -18418,7 +18418,7 @@ pub(crate) mod tests {
     fn test_calculate_fee() {
         // Default: no fee.
         let message =
-            SanitizedMessage::try_from(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap();
+            SanitizedMessage::try_from_legacy_message(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap();
         for cap_transaction_accounts_data_size in &[true, false] {
             assert_eq!(
                 Bank::calculate_fee(
@@ -18461,7 +18461,7 @@ pub(crate) mod tests {
         let key1 = Pubkey::new_unique();
         let ix0 = system_instruction::transfer(&key0, &key1, 1);
         let ix1 = system_instruction::transfer(&key1, &key0, 1);
-        let message = SanitizedMessage::try_from(Message::new(&[ix0, ix1], Some(&key0))).unwrap();
+        let message = SanitizedMessage::try_from_legacy_message(Message::new(&[ix0, ix1], Some(&key0))).unwrap();
         for cap_transaction_accounts_data_size in &[true, false] {
             assert_eq!(
                 Bank::calculate_fee(
@@ -18493,7 +18493,7 @@ pub(crate) mod tests {
         // One signature, no unit request
 
         let message =
-            SanitizedMessage::try_from(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap();
+            SanitizedMessage::try_from_legacy_message(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap();
         for cap_transaction_accounts_data_size in &[true, false] {
             assert_eq!(
                 Bank::calculate_fee(
@@ -18514,7 +18514,7 @@ pub(crate) mod tests {
         let ix0 = system_instruction::transfer(&Pubkey::new_unique(), &Pubkey::new_unique(), 1);
         let ix1 = system_instruction::transfer(&Pubkey::new_unique(), &Pubkey::new_unique(), 1);
         let message =
-            SanitizedMessage::try_from(Message::new(&[ix0, ix1], Some(&Pubkey::new_unique())))
+            SanitizedMessage::try_from_legacy_message(Message::new(&[ix0, ix1], Some(&Pubkey::new_unique())))
                 .unwrap();
         for cap_transaction_accounts_data_size in &[true, false] {
             assert_eq!(
@@ -18551,7 +18551,7 @@ pub(crate) mod tests {
                 PrioritizationFeeType::ComputeUnitPrice(PRIORITIZATION_FEE_RATE),
                 requested_compute_units as u64,
             );
-            let message = SanitizedMessage::try_from(Message::new(
+            let message = SanitizedMessage::try_from_legacy_message(Message::new(
                 &[
                     ComputeBudgetInstruction::set_compute_unit_limit(requested_compute_units),
                     ComputeBudgetInstruction::set_compute_unit_price(PRIORITIZATION_FEE_RATE),
@@ -18599,7 +18599,7 @@ pub(crate) mod tests {
             data: vec![1],
         };
 
-        let message = SanitizedMessage::try_from(Message::new(
+        let message = SanitizedMessage::try_from_legacy_message(Message::new(
             &[
                 ix0.clone(),
                 secp_instruction1.clone(),
@@ -18625,7 +18625,7 @@ pub(crate) mod tests {
 
         secp_instruction1.data = vec![0];
         secp_instruction2.data = vec![10];
-        let message = SanitizedMessage::try_from(Message::new(
+        let message = SanitizedMessage::try_from_legacy_message(Message::new(
             &[ix0, secp_instruction1, secp_instruction2],
             Some(&key0),
         ))
@@ -19172,7 +19172,7 @@ pub(crate) mod tests {
         .unwrap();
 
         // Dummy message to determine fee amount
-        let dummy_message = SanitizedMessage::try_from(Message::new_with_blockhash(
+        let dummy_message = SanitizedMessage::try_from_legacy_message(Message::new_with_blockhash(
             &[system_instruction::transfer(
                 &rent_exempt_fee_payer.pubkey(),
                 &recipient,

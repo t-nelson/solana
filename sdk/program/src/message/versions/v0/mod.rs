@@ -19,7 +19,7 @@ use crate::{
         MessageHeader, MESSAGE_VERSION_PREFIX,
     },
     pubkey::Pubkey,
-    sanitize::SanitizeError,
+    sanitize::{Sanitize, SanitizeConfig, SanitizeError},
     short_vec,
 };
 pub use loaded::*;
@@ -86,9 +86,9 @@ pub struct Message {
     pub address_table_lookups: Vec<MessageAddressTableLookup>,
 }
 
-impl Message {
+impl Sanitize for Message {
     /// Sanitize message fields and compiled instruction indexes
-    pub fn sanitize(&self, reject_dynamic_program_ids: bool) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         let num_static_account_keys = self.account_keys.len();
         if usize::from(self.header.num_required_signatures)
             .saturating_add(usize::from(self.header.num_readonly_unsigned_accounts))
@@ -143,7 +143,7 @@ impl Message {
         // switch to rejecting program ids loaded from lookup tables so that
         // static analysis on program instructions can be performed without
         // loading on-chain data from a bank
-        let max_program_id_ix = if reject_dynamic_program_ids {
+        let max_program_id_ix = if config.require_static_program_ids {
             // `expect` is safe because of earlier check that
             // `num_static_account_keys` is non-zero
             num_static_account_keys

@@ -283,7 +283,7 @@ impl SyncClient for BankClient {
     }
 
     fn get_fee_for_message(&self, message: &Message) -> Result<u64> {
-        SanitizedMessage::try_from(message.clone())
+        SanitizedMessage::try_from_legacy_message(message.clone())
             .ok()
             .and_then(|sanitized_message| self.bank.get_fee_for_message(&sanitized_message))
             .ok_or_else(|| {

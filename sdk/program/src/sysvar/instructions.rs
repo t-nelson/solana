@@ -328,7 +328,7 @@ mod tests {
             &0,
             vec![AccountMeta::new(Pubkey::new_unique(), false)],
         );
-        let sanitized_message = SanitizedMessage::try_from(LegacyMessage::new(
+        let sanitized_message = SanitizedMessage::try_from_legacy_message(LegacyMessage::new(
             &[instruction0.clone(), instruction1.clone()],
             Some(&Pubkey::new_unique()),
         ))
@@ -382,7 +382,7 @@ mod tests {
             &0,
             vec![AccountMeta::new(Pubkey::new_unique(), false)],
         );
-        let sanitized_message = SanitizedMessage::try_from(LegacyMessage::new(
+        let sanitized_message = SanitizedMessage::try_from_legacy_message(LegacyMessage::new(
             &[instruction0, instruction1],
             Some(&Pubkey::new_unique()),
         ))
@@ -436,7 +436,7 @@ mod tests {
             &0,
             vec![AccountMeta::new(Pubkey::new_unique(), false)],
         );
-        let sanitized_message = SanitizedMessage::try_from(LegacyMessage::new(
+        let sanitized_message = SanitizedMessage::try_from_legacy_message(LegacyMessage::new(
             &[
                 instruction0.clone(),
                 instruction1.clone(),
@@ -539,7 +539,7 @@ mod tests {
         ];
 
         let message = LegacyMessage::new(&instructions, Some(&id1));
-        let sanitized_message = SanitizedMessage::try_from(message).unwrap();
+        let sanitized_message = SanitizedMessage::try_from_legacy_message(message).unwrap();
         let serialized = serialize_instructions(&sanitized_message.decompile_instructions());
 
         // assert that deserialize_instruction is compatible with SanitizedMessage::serialize_instructions
@@ -562,7 +562,7 @@ mod tests {
         ];
 
         let message =
-            SanitizedMessage::try_from(LegacyMessage::new(&instructions, Some(&id1))).unwrap();
+            SanitizedMessage::try_from_legacy_message(LegacyMessage::new(&instructions, Some(&id1))).unwrap();
         let serialized = serialize_instructions(&message.decompile_instructions());
         assert_eq!(
             deserialize_instruction(instructions.len(), &serialized).unwrap_err(),

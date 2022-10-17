@@ -1,6 +1,6 @@
 use {
     super::VersionedMessage,
-    crate::{instruction::CompiledInstruction, pubkey::Pubkey, sanitize::SanitizeError},
+    crate::{instruction::CompiledInstruction, pubkey::Pubkey, sanitize::{Sanitize, SanitizeConfig, SanitizeError}},
 };
 
 /// Wraps a sanitized `VersionedMessage` to provide a safe API
@@ -18,7 +18,10 @@ impl TryFrom<VersionedMessage> for SanitizedVersionedMessage {
 
 impl SanitizedVersionedMessage {
     pub fn try_new(message: VersionedMessage) -> Result<Self, SanitizeError> {
-        message.sanitize(true /* require_static_program_ids */)?;
+        let sanitize_config = SanitizeConfig {
+            require_static_program_ids: true,
+        };
+        message.sanitize(sanitize_config)?;
         Ok(Self { message })
     }
 

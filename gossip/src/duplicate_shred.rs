@@ -8,7 +8,7 @@ use {
     solana_sdk::{
         clock::Slot,
         pubkey::Pubkey,
-        sanitize::{Sanitize, SanitizeError},
+        sanitize::{Sanitize, SanitizeConfig, SanitizeError},
     },
     std::{
         collections::{hash_map::Entry, HashMap},
@@ -269,12 +269,12 @@ pub fn into_shreds(
 }
 
 impl Sanitize for DuplicateShred {
-    fn sanitize(&self) -> Result<(), SanitizeError> {
+    fn sanitize(&self, config: SanitizeConfig) -> Result<(), SanitizeError> {
         sanitize_wallclock(self.wallclock)?;
         if self.chunk_index >= self.num_chunks {
             return Err(SanitizeError::IndexOutOfBounds);
         }
-        self.from.sanitize()
+        self.from.sanitize(config)
     }
 }
 
