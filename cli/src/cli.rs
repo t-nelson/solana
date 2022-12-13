@@ -447,6 +447,7 @@ pub enum CliCommand {
         signature: Signature,
         message: OffchainMessage,
     },
+    DeactivateDelinquent(deactivate_delinquent::CliCommand),
 }
 
 #[derive(Debug, PartialEq)]
@@ -823,6 +824,9 @@ pub fn parse_command(
         }
         ("verify-offchain-signature", Some(matches)) => {
             parse_verify_offchain_signature(matches, default_signer, wallet_manager)
+        }
+        ("deactivate-delinquent", Some(matches)) => {
+            deactivate_delinquent::parse_subcommand(matches, default_signer, wallet_manager)
         }
         //
         ("", None) => {
@@ -1642,6 +1646,9 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
             signature,
             message,
         } => process_verify_offchain_signature(config, signer_pubkey, signature, message),
+        CliCommand::DeactivateDelinquent(subcommand) => {
+            deactivate_delinquent::process_subcommand(rpc_client, config, subcommand)
+        }
     }
 }
 

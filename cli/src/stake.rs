@@ -24,7 +24,7 @@ use {
         ArgConstant,
     },
     solana_cli_output::{
-        self, display::BuildBalanceMessageConfig, return_signers_with_config, CliBalance,
+        self, display::{build_balance_message_with_config, BuildBalanceMessageConfig}, return_signers_with_config, CliBalance,
         CliEpochReward, CliStakeHistory, CliStakeHistoryEntry, CliStakeState, CliStakeType,
         OutputFormat, ReturnSignersConfig,
     },
@@ -37,7 +37,7 @@ use {
     solana_sdk::{
         account::from_account,
         account_utils::StateMut,
-        clock::{Clock, UnixTimestamp, SECONDS_PER_DAY},
+        clock::{Clock, Slot, UnixTimestamp, SECONDS_PER_DAY},
         commitment_config::CommitmentConfig,
         epoch_schedule::EpochSchedule,
         message::Message,
@@ -48,13 +48,13 @@ use {
             state::{Authorized, Lockup, Meta, StakeActivationStatus, StakeAuthorize, StakeState},
             tools::{acceptable_reference_epoch_credits, eligible_for_deactivate_delinquent},
         },
-        stake_history::StakeHistory,
+        stake_history::{StakeHistory, StakeHistoryEntry},
         system_instruction::SystemError,
         sysvar::{clock, stake_history},
         transaction::Transaction,
     },
     solana_vote_program::vote_state::VoteState,
-    std::{ops::Deref, sync::Arc},
+    std::{collections::HashMap, ops::Deref, sync::Arc},
 };
 
 pub const STAKE_AUTHORITY_ARG: ArgConstant<'static> = ArgConstant {
@@ -100,6 +100,166 @@ fn custodian_arg<'a, 'b>() -> Arg<'a, 'b> {
         .value_name("KEYPAIR")
         .validator(is_valid_signer)
         .help(CUSTODIAN_ARG.help)
+}
+
+use deactivate_delinquent::*;
+pub mod deactivate_delinquent {
+    use super::*;
+
+    pub(super) trait SubCommands {
+        fn deactivate_delinquent_subcommands(self) -> Self;
+    }
+
+    impl SubCommands for App<'_, '_> {
+        fn deactivate_delinquent_subcommands(self) -> Self {
+            self.subcommand(
+                SubCommand::with_name("deactivate-delinquent")
+                    .about("Permission-less deactivation of stake from delinquent validators")
+                    .setting(clap::AppSettings::SubcommandRequiredElseHelp)
+                    .subcommand(
+                        SubCommand::with_name("list")
+                            .about("Display validators and stake accounts eligitble for permissionless deactivation")
+                    )
+                    .subcommand(
+                        SubCommand::with_name("deactivate")
+                            .about("Deactivate stake account(s) from delinquent validator(s)")
+                    )
+            )
+        }
+    }
+
+    #[derive(Debug, PartialEq)]
+    pub enum CliCommand {
+        List,
+        Deactivate,
+    }
+
+    pub fn parse_subcommand(
+        matches: &ArgMatches<'_>,
+        default_signer: &DefaultSigner,
+        wallet_manager: &mut Option<Arc<RemoteWalletManager>>,
+    ) -> Result<CliCommandInfo, CliError> {
+        match matches.subcommand() {
+            ("list", Some(_submatches)) => {
+                Ok(CliCommandInfo {
+                    command: super::CliCommand::DeactivateDelinquent(CliCommand::List),
+                    signers: Vec::new(),
+                })
+            }
+            ("deactivate", Some(submatches)) => {
+                let mut bulk_signers = vec![
+                    Some(default_signer.signer_from_path(submatches, wallet_manager)?),
+                ];
+                let signer_info =
+                    default_signer.generate_unique_signers(bulk_signers, matches, wallet_manager)?;
+                Ok(CliCommandInfo {
+                    command: super::CliCommand::DeactivateDelinquent(CliCommand::Deactivate),
+                    signers: signer_info.signers,
+                })
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct DelinquentStake {
+        address: Pubkey,
+        active_stake: u64,
+    }
+    impl DelinquentStake {
+        pub fn new(address: Pubkey, active_stake: u64) -> Self {
+            Self { address, active_stake }
+        }
+    }
+    type DelinquentStakes = Vec<DelinquentStake>;
+    #[derive(Debug)]
+    pub struct EligibleDelinquentEntry {
+        last_voted_slot: Slot,
+        stakes: DelinquentStakes,
+    }
+    impl EligibleDelinquentEntry {
+        pub fn new(last_voted_slot: Slot, stakes: DelinquentStakes) -> Self {
+            Self { last_voted_slot, stakes }
+        }
+    }
+    type EligibleDelinquents = HashMap<Pubkey, EligibleDelinquentEntry>;
+    #[derive(Debug)]
+    struct UiEligibleDelinquents {
+        current_slot: Slot,
+        eligible_delinquents: EligibleDelinquents,
+    }
+
+    pub fn process_subcommand(
+        rpc_client: Arc<RpcClient>,
+        config: &CliConfig,
+        subcommand: &CliCommand,
+    ) -> ProcessResult {
+        match subcommand {
+            CliCommand::List => {
+                let epoch_info = rpc_client.get_epoch_info()?;
+                let mut eligible_vote_accounts = rpc_client
+                    .get_program_accounts(&solana_vote_program::id())?
+                    .into_iter()
+                    .filter_map(|(address, account)| {
+                        VoteState::deserialize(&account.data)
+                            .ok()
+                            .and_then(|vote_state| {
+                                eligible_for_deactivate_delinquent(&vote_state.epoch_credits, epoch_info.epoch)
+                                    .then_some((address, (Vec::new(), (epoch_info.absolute_slot - vote_state.last_voted_slot().unwrap_or(0)) / 432000)))
+                            })
+                    })
+                    .collect::<HashMap<_, _>>();
+                let stake_history = rpc_client
+                    .get_account(&stake_history::id())
+                    .ok()
+                    .and_then(|account| account.deserialize_data::<StakeHistory>().ok())
+                    .unwrap();
+                rpc_client
+                    .get_program_accounts(&stake::program::id())?
+                    .into_iter()
+                    .for_each(|(address, account)| {
+                        if let Ok(StakeState::Stake(_, stake)) = account.deserialize_data::<StakeState>() {
+                            let StakeHistoryEntry { effective, .. } =
+                                stake.delegation.stake_activating_and_deactivating(epoch_info.epoch, Some(&stake_history));
+                            if effective > 0 {
+                                eligible_vote_accounts
+                                    .entry(stake.delegation.voter_pubkey)
+                                    .and_modify(|(voter_stakes, _)| voter_stakes.push((address, effective)));
+                            }
+                        }
+                    });
+
+                let bbmc = BuildBalanceMessageConfig {
+                    trim_trailing_zeros: false,
+                    ..BuildBalanceMessageConfig::default()
+                };
+                let mut eligible_stake_accounts = 0;
+                let mut eligible_stake = 0;
+                eligible_vote_accounts
+                    .iter()
+                    .filter(|(_, (stakes, _))| !stakes.is_empty())
+                    .for_each(|(voter, (stakes, delinquency))| {
+                        let num_stakes = stakes.len();
+                        let total_stake = build_balance_message_with_config(
+                            stakes.iter().map(|(_, stake)| *stake).sum(),
+                            &BuildBalanceMessageConfig::default(),
+                        );
+                        eligible_stake_accounts += num_stakes;
+                        println!("{voter}: (stake accounts: {num_stakes}, total stake: {total_stake}, delinquency: {delinquency}");
+                        for (address, stake) in stakes {
+                            eligible_stake_accounts += 1;
+                            eligible_stake += *stake;
+                            let stake = build_balance_message_with_config(*stake, &bbmc);
+                            let address = address.to_string();
+                            println!("  {address:<44}  {stake:>22}")
+                        }
+                    });
+                println!("vote accounts: {}, stake accounts: {eligible_stake_accounts}, stake: {}", eligible_vote_accounts.iter().filter(|(_, (stakes, _))| !stakes.is_empty()).count(), build_balance_message_with_config(eligible_stake, &BuildBalanceMessageConfig::default()));
+                Ok("list".to_string())
+            }
+            CliCommand::Deactivate => Ok("deactivate".to_string()),
+        }
+    }
 }
 
 pub(crate) struct StakeAuthorization {
@@ -729,6 +889,7 @@ impl StakeSubCommands for App<'_, '_> {
                         .help("Display minimum delegation in lamports instead of SOL")
                 )
         )
+        .deactivate_delinquent_subcommands()
     }
 }
 
