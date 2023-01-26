@@ -1713,6 +1713,7 @@ mod tests {
         },
         solana_rpc_client_nonce_utils::blockhash_query,
         solana_sdk::{
+            offchain_message::Version as OffchainMessageVersion,
             pubkey::Pubkey,
             signature::{
                 keypair_from_seed, read_keypair_file, write_keypair_file, Keypair, Presigner,
@@ -1983,7 +1984,7 @@ mod tests {
             "sign-offchain-message",
             "Test Message",
         ]);
-        let message = OffchainMessage::new(0, "Test Message").unwrap();
+        let message = OffchainMessage::new(OffchainMessageVersion::V0, "Test Message").unwrap();
         assert_eq!(
             parse_command(&test_sign_offchain, &default_signer, &mut None).unwrap(),
             CliCommandInfo {
@@ -2360,7 +2361,7 @@ mod tests {
         config.command = CliCommand::GetTransactionCount;
         assert!(process_command(&config).is_err());
 
-        let message = OffchainMessage::new(0, "Test Message").unwrap();
+        let message = OffchainMessage::new(OffchainMessageVersion::V0, "Test Message").unwrap();
         config.command = CliCommand::SignOffchainMessage {
             message: message.clone(),
         };
