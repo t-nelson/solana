@@ -700,7 +700,35 @@ where
     if votes.len() > NUM_SLOTS {
         votes.select_nth_unstable_by_key(NUM_SLOTS, |(_, num)| Reverse(*num));
     }
-    for (slot, num_votes) in votes.into_iter().take(NUM_SLOTS) {
-        datapoint_trace!(name, ("slot", slot, i64), ("num_votes", num_votes, i64));
-    }
+
+    #[cfg(test)]
+    static_assertions::const_assert_eq!(NUM_SLOTS, 10);
+    let (slots, vote_counts): (Vec<_>, Vec<_>) = votes
+        .into_iter()
+        .chain(std::iter::repeat((0, 0)))
+        .take(NUM_SLOTS)
+        .unzip();
+    datapoint_trace!(
+        name,
+        ("slot0", slots[0], i64),
+        ("num_votes0", vote_counts[0], i64),
+        ("slot1", slots[1], i64),
+        ("num_votes1", vote_counts[1], i64),
+        ("slot2", slots[2], i64),
+        ("num_votes2", vote_counts[2], i64),
+        ("slot3", slots[3], i64),
+        ("num_votes3", vote_counts[3], i64),
+        ("slot4", slots[4], i64),
+        ("num_votes4", vote_counts[4], i64),
+        ("slot5", slots[5], i64),
+        ("num_votes5", vote_counts[5], i64),
+        ("slot6", slots[6], i64),
+        ("num_votes6", vote_counts[6], i64),
+        ("slot7", slots[7], i64),
+        ("num_votes7", vote_counts[7], i64),
+        ("slot8", slots[8], i64),
+        ("num_votes8", vote_counts[8], i64),
+        ("slot9", slots[9], i64),
+        ("num_votes9", vote_counts[9], i64),
+    );
 }
