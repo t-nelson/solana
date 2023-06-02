@@ -316,7 +316,44 @@ impl VerifiedVotePackets {
                             }
                         }
                         _ => {
-                            
+                            if let Some(FullTowerVote(gossip_vote)) =
+                                self.0.get_mut(&vote_account_key)
+                            {
+                                if slot > gossip_vote.slot && is_full_tower_vote_enabled {
+                                    warn!(
+                                        "Originally {} submitted full tower votes, but now has reverted to incremental votes. Converting back to old format.",
+                                        vote_account_key
+                                    );
+                                    let mut votes = BTreeMap::new();
+                                    let GossipVote {
+                                        slot,
+                                        hash,
+                                        packet_batch,
+                                        signature,
+                                        ..
+                                    } = std::mem::take(gossip_vote);
+                                    votes.insert((slot, hash), (packet_batch, signature));
+                                    self.0.insert(vote_account_key, IncrementalVotes(votes));
+                                } else {
+                                    continue;
+                                }
+                            };
+                            let validator_votes: &mut BTreeMap<
+                                (Slot, Hash),
+                                (PacketBatch, Signature),
+                            > = match self
+                                .0
+                                .entry(vote_account_key)
+                                .or_insert(IncrementalVotes(BTreeMap::new()))
+                            {
+                                IncrementalVotes(votes) => votes,
+                                FullTowerVote(_) => continue, // Should never happen
+                            };
+                            validator_votes.insert((slot, hash), (packet_batch, signature));
+                            if validator_votes.len() > MAX_VOTES_PER_VALIDATOR {
+                                let smallest_key = validator_votes.keys().next().cloned().unwrap();
+                                validator_votes.remove(&smallest_key).unwrap();
+                            }
                         }
                     }
                 }
