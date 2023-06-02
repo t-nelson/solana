@@ -313,9 +313,12 @@ impl VerifiedVotePackets {
                                         timestamp,
                                     }),
                                 );
+                            } else {
+                                warn!("dropped votestateupdate: slot({slot:?}) latest_gossip_slot({latest_gossip_slot:?}) timestamp({timestamp:?}) latest_timestamp({latest_timestamp:?})");
                             }
                         }
                         _ => {
+                            warn!("not towerupdate+enabled: vote({vote:?}) enabled({is_full_tower_vote_enabled:?})");
                             if let Some(FullTowerVote(gossip_vote)) =
                                 self.0.get_mut(&vote_account_key)
                             {
@@ -335,6 +338,7 @@ impl VerifiedVotePackets {
                                     votes.insert((slot, hash), (packet_batch, signature));
                                     self.0.insert(vote_account_key, IncrementalVotes(votes));
                                 } else {
+                                    warn!("dropping full tower update: slot({slot:?}) gossip_vote_slot({gossip_vote.slot:?}) enabled({is_full_tower_vote_enabled:?})");
                                     continue;
                                 }
                             };
@@ -347,11 +351,15 @@ impl VerifiedVotePackets {
                                 .or_insert(IncrementalVotes(BTreeMap::new()))
                             {
                                 IncrementalVotes(votes) => votes,
-                                FullTowerVote(_) => continue, // Should never happen
+                                FullTowerVote(_) => {
+                                    warn!("{vote_account_key} switched from incremental to fulltower voting");
+                                    continue, // Should never happen
+                                },
                             };
                             validator_votes.insert((slot, hash), (packet_batch, signature));
                             if validator_votes.len() > MAX_VOTES_PER_VALIDATOR {
                                 let smallest_key = validator_votes.keys().next().cloned().unwrap();
+                                warn!("dropping excess validator vote for {vote_account_key}: smallest_key({smallest_key:?})");
                                 validator_votes.remove(&smallest_key).unwrap();
                             }
                         }
