@@ -2159,6 +2159,11 @@ impl BankingStage {
             buffered_packet_batches.capacity() - buffered_packet_batches.len(),
         )?;
 
+        if id==1 {
+            // Drop turbine votes
+            return Err(RecvTimeoutError::Timeout);
+        }
+
         if let Some(new_sigverify_tracer_packet_stats) = &new_sigverify_tracer_packet_stats_option {
             tracer_packet_stats
                 .aggregate_sigverify_tracer_packet_stats(new_sigverify_tracer_packet_stats);

@@ -689,9 +689,7 @@ pub(crate) fn submit_gossip_stats(
         ("all-push", crds_stats.push.fails.iter().sum::<usize>(), i64),
         ("all-pull", crds_stats.pull.fails.iter().sum::<usize>(), i64),
     );
-    if !log::log_enabled!(log::Level::Trace) {
-        return;
-    }
+
     submit_vote_stats("cluster_info_crds_stats_votes_pull", &crds_stats.pull.votes);
     submit_vote_stats("cluster_info_crds_stats_votes_push", &crds_stats.push.votes);
     let votes: HashMap<Slot, usize> = crds_stats
@@ -715,6 +713,6 @@ where
         votes.select_nth_unstable_by_key(NUM_SLOTS, |(_, num)| Reverse(*num));
     }
     for (slot, num_votes) in votes.into_iter().take(NUM_SLOTS) {
-        datapoint_trace!(name, ("slot", slot, i64), ("num_votes", num_votes, i64));
+        datapoint_warn!(name, ("slot", slot, i64), ("num_votes", num_votes, i64));
     }
 }

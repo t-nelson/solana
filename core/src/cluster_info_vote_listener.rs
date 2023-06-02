@@ -18,7 +18,6 @@ use {
     },
     solana_ledger::blockstore::Blockstore,
     solana_measure::measure::Measure,
-    solana_metrics::inc_new_counter_debug,
     solana_perf::packet,
     solana_poh::poh_recorder::PohRecorder,
     solana_rpc::{
@@ -159,8 +158,17 @@ impl BankVoteSenderState {
         }
     }
 
-    fn report_metrics(&self) {
+    fn report_metrics(&mut self) {
         self.bank_send_votes_stats.report_metrics(self.bank.slot());
+        self.bank_send_votes_stats.num_votes_sent = 0;
+        self.bank_send_votes_stats.num_batches_sent = 0;
+        self.bank_send_votes_stats.incr_filtered_prev_sent_count = 0;
+        self.bank_send_votes_stats.incr_filtered_hash_miss_count = 0;
+        self.bank_send_votes_stats.none_queued = 0;
+        self.bank_send_votes_stats.all_filtered_out_tower = 0;
+        self.bank_send_votes_stats.good_tower = 0;
+        self.bank_send_votes_stats.all_filtered_out_incr = 0;
+        self.bank_send_votes_stats.good_incr = 0;
     }
 }
 
@@ -169,6 +177,13 @@ struct BankSendVotesStats {
     num_votes_sent: usize,
     num_batches_sent: usize,
     total_elapsed: u64,
+    incr_filtered_prev_sent_count: usize,
+    incr_filtered_hash_miss_count: usize,
+    none_queued: usize,
+    all_filtered_out_tower: usize,
+    good_tower: usize,
+    all_filtered_out_incr: usize,
+    good_incr: usize,
 }
 
 impl BankSendVotesStats {
@@ -179,6 +194,41 @@ impl BankSendVotesStats {
             ("num_votes_sent", self.num_votes_sent, i64),
             ("total_elapsed", self.total_elapsed, i64),
             ("num_batches_sent", self.num_batches_sent, i64),
+            (
+                "incr_filtered_prev_sent_count",
+                self.incr_filtered_prev_sent_count,
+                i64
+            ),
+            (
+                "incr_filtered_hash_miss_count",
+                self.incr_filtered_hash_miss_count,
+                i64
+            ),
+            (
+                "none_queued",
+                self.none_queued,
+                i64
+            ),
+            (
+                "all_filtered_out_tower",
+                self.all_filtered_out_tower,
+                i64
+            ),
+            (
+                "good_tower",
+                self.good_tower,
+                i64
+            ),
+            (
+                "all_filtered_out_incr",
+                self.all_filtered_out_incr,
+                i64
+            ),
+            (
+                "good_incr",
+                self.good_incr,
+                i64
+            ),
         );
     }
 }
@@ -245,6 +295,7 @@ impl ClusterInfoVoteListener {
         bank_notification_sender: Option<BankNotificationSender>,
         cluster_confirmed_slot_sender: GossipDuplicateConfirmedSlotsSender,
     ) -> Self {
+        let poh_recorder_copy = poh_recorder.clone();
         let (verified_vote_label_packets_sender, verified_vote_label_packets_receiver) =
             unbounded();
         let (verified_vote_transactions_sender, verified_vote_transactions_receiver) = unbounded();
@@ -260,6 +311,7 @@ impl ClusterInfoVoteListener {
                         &bank_forks,
                         verified_vote_label_packets_sender,
                         verified_vote_transactions_sender,
+                        poh_recorder,
                     );
                 })
                 .unwrap()
@@ -271,7 +323,7 @@ impl ClusterInfoVoteListener {
                 let _ = Self::bank_send_loop(
                     exit_,
                     verified_vote_label_packets_receiver,
-                    poh_recorder,
+                    poh_recorder_copy,
                     &verified_packets_sender,
                 );
             })
@@ -311,16 +363,71 @@ impl ClusterInfoVoteListener {
         bank_forks: &RwLock<BankForks>,
         verified_vote_label_packets_sender: VerifiedLabelVotePacketsSender,
         verified_vote_transactions_sender: VerifiedVoteTransactionsSender,
+        poh_recorder: Arc<RwLock<PohRecorder>>,
     ) -> Result<()> {
         let mut cursor = Cursor::default();
+        let mut vote_pubkeys = HashSet::new();
+        let mut vote_pubkeys_full = HashSet::new();
+        let mut current_slot = 0;
+        let mut iterations = 0;
         while !exit.load(Ordering::Relaxed) {
             let votes = cluster_info.get_votes(&mut cursor);
-            inc_new_counter_debug!("cluster_info_vote_listener-recv_count", votes.len());
+            inc_new_counter_warn!("cluster_info_vote_listener-recv_count", votes.len());
+
+            let would_be_leader = poh_recorder
+                .read()
+                .unwrap()
+                .would_be_leader(3 * slot_hashes::MAX_ENTRIES as u64 * DEFAULT_TICKS_PER_SLOT);
+            let current_working_bank = poh_recorder.read().unwrap().bank();
+            if would_be_leader {
+                iterations += 1;
+                // Only start counting once we're close to being leader.
+                for vote in &votes {
+                    vote_pubkeys.insert(vote.message().account_keys[0]);
+                }
+
+                if current_working_bank.is_some() {
+                    for vote in &votes {
+                        vote_pubkeys_full.insert(vote.message().account_keys[0]);
+                    }
+                }
+            } else if current_working_bank.is_none() && current_slot > 0 {
+                // Transitioned slots (no longer leader), report/clear metrics.
+                datapoint_info!(
+                    "cluster_info_vote_listener-recv-loop-vote-stats",
+                    ("slot", current_slot, i64),
+                    ("unique_vote_keys", vote_pubkeys.len(), i64),
+                    ("unique_vote_keys_cum", vote_pubkeys_full.len(), i64),
+                    ("iterations", iterations, i64),
+                );
+                current_slot = 0;
+                vote_pubkeys.clear();
+                vote_pubkeys_full.clear();
+                iterations = 0;
+            }
+
+            if let Some(current_working_bank) = current_working_bank {
+                if current_slot != current_working_bank.slot() {
+                    // Transitioned slots, report/clear metrics.
+                    datapoint_info!(
+                        "cluster_info_vote_listener-recv-loop-vote-stats",
+                        ("slot", current_slot, i64),
+                        ("unique_vote_keys", vote_pubkeys.len(), i64),
+                        ("unique_vote_keys_cum", vote_pubkeys_full.len(), i64),
+                        ("iterations", iterations, i64),
+                    );
+                    current_slot = current_working_bank.slot();
+                    vote_pubkeys.clear();
+                    iterations = 0;
+                }
+            }
+
             if !votes.is_empty() {
                 let (vote_txs, packets) = Self::verify_votes(votes, bank_forks);
                 verified_vote_transactions_sender.send(vote_txs)?;
                 verified_vote_label_packets_sender.send(packets)?;
             }
+
             sleep(Duration::from_millis(GOSSIP_SLEEP_MILLIS));
         }
         Ok(())
@@ -423,6 +530,9 @@ impl ClusterInfoVoteListener {
                         verified_packets_sender,
                         &verified_vote_packets,
                     )?;
+                } else if let Some(bank_vote_sender_state) = &mut bank_vote_sender_state_option {
+                    bank_vote_sender_state.report_metrics();
+                    bank_vote_sender_state_option = None;
                 }
             }
         }
@@ -456,10 +566,24 @@ impl ClusterInfoVoteListener {
         // we just have to ensure that the same votes are not sent
         // to the bank multiple times, which is guaranteed by
         // `previously_sent_to_bank_votes`
+        let mut incr_filtered_prev_sent_count: usize = 0;
+        let mut incr_filtered_hash_miss_count: usize = 0;
+        let mut none_queued: usize = 0;
+        let mut all_filtered_out_tower: usize = 0;
+        let mut good_tower: usize = 0;
+        let mut all_filtered_out_incr: usize = 0;
+        let mut good_incr: usize = 0;
         let gossip_votes_iterator = ValidatorGossipVotesIterator::new(
             bank.clone(),
             verified_vote_packets,
             previously_sent_to_bank_votes,
+            &mut incr_filtered_prev_sent_count,
+            &mut incr_filtered_hash_miss_count,
+            &mut none_queued,
+            &mut all_filtered_out_tower,
+            &mut good_tower,
+            &mut all_filtered_out_incr,
+            &mut good_incr,
         );
 
         let mut filter_gossip_votes_timing = Measure::start("filter_gossip_votes");
@@ -475,7 +599,53 @@ impl ClusterInfoVoteListener {
             verified_packets_sender.send((single_validator_votes, None))?;
         }
         filter_gossip_votes_timing.stop();
+        datapoint_info!(
+            "cluster_info_vote_listener-bank-send-vote-stats-iter",
+            ("slot", bank.slot(), i64),
+            (
+                "incr_filtered_prev_sent_count",
+                incr_filtered_prev_sent_count,
+                i64
+            ),
+            (
+                "incr_filtered_hash_miss_count",
+                incr_filtered_hash_miss_count,
+                i64
+            ),
+            (
+                "none_queued",
+                none_queued,
+                i64
+            ),
+            (
+                "all_filtered_out_tower",
+                all_filtered_out_tower,
+                i64
+            ),
+            (
+                "good_tower",
+                good_tower,
+                i64
+            ),
+            (
+                "all_filtered_out_incr",
+                all_filtered_out_incr,
+                i64
+            ),
+            (
+                "good_incr",
+                good_incr,
+                i64
+            ),
+        );
         bank_send_votes_stats.total_elapsed += filter_gossip_votes_timing.as_us();
+        bank_send_votes_stats.incr_filtered_prev_sent_count += incr_filtered_prev_sent_count;
+        bank_send_votes_stats.incr_filtered_hash_miss_count += incr_filtered_hash_miss_count;
+        bank_send_votes_stats.none_queued += none_queued;
+        bank_send_votes_stats.all_filtered_out_tower += all_filtered_out_tower;
+        bank_send_votes_stats.good_tower += good_tower;
+        bank_send_votes_stats.all_filtered_out_incr += all_filtered_out_incr;
+        bank_send_votes_stats.good_incr += good_incr;
 
         Ok(())
     }

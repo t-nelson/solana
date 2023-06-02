@@ -22,8 +22,6 @@ use {
     },
 };
 
-const MAX_VOTES_PER_VALIDATOR: usize = 1000;
-
 pub struct VerifiedVoteMetadata {
     pub vote_account_key: Pubkey,
     pub vote: VoteTransaction,
@@ -37,6 +35,13 @@ pub struct ValidatorGossipVotesIterator<'a> {
     verified_vote_packets: &'a VerifiedVotePackets,
     vote_account_keys: Vec<Pubkey>,
     previously_sent_to_bank_votes: &'a mut HashSet<Signature>,
+    pub incr_filtered_prev_sent_count: &'a mut usize,
+    pub incr_filtered_hash_miss_count: &'a mut usize,
+    pub none_queued: &'a mut usize,
+    pub all_filtered_out_tower: &'a mut usize,
+    pub good_tower: &'a mut usize,
+    pub all_filtered_out_incr: &'a mut usize,
+    pub good_incr: &'a mut usize,
 }
 
 impl<'a> ValidatorGossipVotesIterator<'a> {
@@ -44,6 +49,13 @@ impl<'a> ValidatorGossipVotesIterator<'a> {
         my_leader_bank: Arc<Bank>,
         verified_vote_packets: &'a VerifiedVotePackets,
         previously_sent_to_bank_votes: &'a mut HashSet<Signature>,
+        incr_filtered_prev_sent_count: &'a mut usize,
+        incr_filtered_hash_miss_count: &'a mut usize,
+        none_queued: &'a mut usize,
+        all_filtered_out_tower: &'a mut usize,
+        good_tower: &'a mut usize,
+        all_filtered_out_incr: &'a mut usize,
+        good_incr: &'a mut usize,
     ) -> Self {
         let slot_hashes_account = my_leader_bank.get_account(&sysvar::slot_hashes::id());
 
@@ -68,6 +80,13 @@ impl<'a> ValidatorGossipVotesIterator<'a> {
             verified_vote_packets,
             vote_account_keys,
             previously_sent_to_bank_votes,
+            incr_filtered_prev_sent_count,
+            incr_filtered_hash_miss_count,
+            none_queued,
+            all_filtered_out_tower,
+            good_tower,
+            all_filtered_out_incr,
+            good_incr,
         }
     }
 
@@ -77,9 +96,13 @@ impl<'a> ValidatorGossipVotesIterator<'a> {
         hash: &Hash,
         packet: &PacketBatch,
         tx_signature: &Signature,
+        incremental_vote: bool,
     ) -> Option<PacketBatch> {
         // Don't send the same vote to the same bank multiple times
         if self.previously_sent_to_bank_votes.contains(tx_signature) {
+            if incremental_vote {
+                *self.incr_filtered_prev_sent_count += 1;
+            }
             return None;
         }
         self.previously_sent_to_bank_votes.insert(*tx_signature);
@@ -93,6 +116,9 @@ impl<'a> ValidatorGossipVotesIterator<'a> {
         {
             Some(packet.clone())
         } else {
+            if incremental_vote {
+                *self.incr_filtered_hash_miss_count += 1;
+            }
             None
         }
     }
@@ -114,11 +140,12 @@ impl<'a> Iterator for ValidatorGossipVotesIterator<'a> {
             // that are:
             // 1) missing from the current leader bank
             // 2) on the same fork
-            let validator_votes = self
-                .verified_vote_packets
-                .0
-                .get(&vote_account_key)
-                .and_then(|validator_gossip_votes| {
+            let validator_votes = {
+                let potential_votes = self.verified_vote_packets.0.get(&vote_account_key);
+                if potential_votes.is_none() {
+                    *self.none_queued += 1;
+                }
+                potential_votes.and_then(|validator_gossip_votes| {
                     // Fetch the validator's vote state from the bank
                     self.my_leader_bank
                         .vote_accounts()
@@ -134,22 +161,47 @@ impl<'a> Iterator for ValidatorGossipVotesIterator<'a> {
                                         packet_batch,
                                         signature,
                                         ..
-                                    }) => self
-                                        .filter_vote(slot, hash, packet_batch, signature)
-                                        .map(|packet| vec![packet])
-                                        .unwrap_or_default(),
+                                    }) => {
+                                        let x = self
+                                            .filter_vote(slot, hash, packet_batch, signature, false)
+                                            .map(|packet| vec![packet])
+                                            .unwrap_or_default();
+                                        if !x.is_empty() {
+                                            *self.good_tower += 1;
+                                        } else {
+                                            *self.all_filtered_out_tower += 1;
+                                        }
+                                        x
+                                    }
                                     IncrementalVotes(validator_gossip_votes) => {
-                                        validator_gossip_votes
+                                        let mut highest_slot = 0;
+                                        let y = validator_gossip_votes
                                             .range((start_vote_slot, Hash::default())..)
                                             .filter_map(|((slot, hash), (packet, tx_signature))| {
-                                                self.filter_vote(slot, hash, packet, tx_signature)
+                                                highest_slot = highest_slot.max(*slot);
+                                                let x = self.filter_vote(
+                                                    slot,
+                                                    hash,
+                                                    packet,
+                                                    tx_signature,
+                                                    true,
+                                                );
+                                                x
                                             })
-                                            .collect::<Vec<PacketBatch>>()
+                                            .collect::<Vec<PacketBatch>>();
+                                        if !y.is_empty() {
+                                            *self.good_incr += 1;
+                                        } else {
+                                            *self.all_filtered_out_incr += 1;
+                                            warn!("BWLOG0: All incrementals filtered out - highest slot was {highest_slot}");
+                                        }
+                                        y
                                     }
                                 }
                             })
                         })
-                });
+                })
+            };
             if let Some(validator_votes) = validator_votes {
                 if !validator_votes.is_empty() {
                     return Some(validator_votes);
@@ -264,44 +316,7 @@ impl VerifiedVotePackets {
                             }
                         }
                         _ => {
-                            if let Some(FullTowerVote(gossip_vote)) =
-                                self.0.get_mut(&vote_account_key)
-                            {
-                                if slot > gossip_vote.slot && is_full_tower_vote_enabled {
-                                    warn!(
-                                        "Originally {} submitted full tower votes, but now has reverted to incremental votes. Converting back to old format.",
-                                        vote_account_key
-                                    );
-                                    let mut votes = BTreeMap::new();
-                                    let GossipVote {
-                                        slot,
-                                        hash,
-                                        packet_batch,
-                                        signature,
-                                        ..
-                                    } = std::mem::take(gossip_vote);
-                                    votes.insert((slot, hash), (packet_batch, signature));
-                                    self.0.insert(vote_account_key, IncrementalVotes(votes));
-                                } else {
-                                    continue;
-                                }
-                            };
-                            let validator_votes: &mut BTreeMap<
-                                (Slot, Hash),
-                                (PacketBatch, Signature),
-                            > = match self
-                                .0
-                                .entry(vote_account_key)
-                                .or_insert(IncrementalVotes(BTreeMap::new()))
-                            {
-                                IncrementalVotes(votes) => votes,
-                                FullTowerVote(_) => continue, // Should never happen
-                            };
-                            validator_votes.insert((slot, hash), (packet_batch, signature));
-                            if validator_votes.len() > MAX_VOTES_PER_VALIDATOR {
-                                let smallest_key = validator_votes.keys().next().cloned().unwrap();
-                                validator_votes.remove(&smallest_key).unwrap();
-                            }
+                            
                         }
                     }
                 }
