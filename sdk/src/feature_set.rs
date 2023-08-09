@@ -687,6 +687,10 @@ pub mod reduce_stake_warmup_cooldown {
     }
 }
 
+pub mod remaining_compute_units_syscall_enabled {
+    solana_sdk::declare_id!("5TuppMutoyzhUSfuYdhgzD47F92GL1g89KpCZQKqedxP");
+}
+
 lazy_static! {
     /// Map of feature identifiers to user-visible description
     pub static ref FEATURE_NAMES: HashMap<Pubkey, &'static str> = [
@@ -851,6 +855,7 @@ lazy_static! {
         (bpf_account_data_direct_mapping::id(), "use memory regions to map account data into the rbpf vm instead of copying the data"),
         (last_restart_slot_sysvar::id(), "enable new sysvar last_restart_slot"),
         (reduce_stake_warmup_cooldown::id(), "reduce stake warmup cooldown from 25% to 9%"),
+        (remaining_compute_units_syscall_enabled::id(), "enable the remaining_compute_units syscall"),
         /*************** ADD NEW FEATURES HERE ***************/
     ]
     .iter()

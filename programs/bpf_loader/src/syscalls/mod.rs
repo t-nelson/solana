@@ -39,8 +39,8 @@ use {
             enable_early_verification_of_account_modifications, enable_partitioned_epoch_reward,
             error_on_syscall_bpf_function_hash_collisions, last_restart_slot_sysvar,
             libsecp256k1_0_5_upgrade_enabled, reject_callx_r10,
-            stop_sibling_instruction_search_at_parent, stop_truncating_strings_in_syscalls,
-            switch_to_new_elf_parser,
+            remaining_compute_units_syscall_enabled, stop_sibling_instruction_search_at_parent,
+            stop_truncating_strings_in_syscalls, switch_to_new_elf_parser,
         },
         hash::{Hasher, HASH_BYTES},
         instruction::{
@@ -158,6 +158,8 @@ pub fn create_program_runtime_environment<'a>(
     let disable_deploy_of_alloc_free_syscall = reject_deployment_of_broken_elfs
         && feature_set.is_active(&disable_deploy_of_alloc_free_syscall::id());
     let last_restart_slot_syscall_enabled = feature_set.is_active(&last_restart_slot_sysvar::id());
+    let remaining_compute_units_syscall_enabled =
+        feature_set.is_active(&remaining_compute_units_syscall_enabled::id());
     // !!! ATTENTION !!!
     // When adding new features for RBPF here,
     // also add them to `Bank::apply_builtin_program_feature_transitions()`.
@@ -327,6 +329,14 @@ pub fn create_program_runtime_environment<'a>(
 
     // Log data
     result.register_function(b"sol_log_data", SyscallLogData::call)?;
+
+    // Accessing remaining compute units
+    register_feature_gated_function!(
+        result,
+        remaining_compute_units_syscall_enabled,
+        b"sol_remaining_compute_units",
+        SyscallRemainingComputeUnits::call
+    )?;
 
     Ok(result)
 }
@@ -1772,6 +1782,26 @@ declare_syscall!(
         return_value.copy_from_slice(value.as_slice());
 
         Ok(0)
+    }
+);
+
+declare_syscall!(
+    /// Read remaining compute units
+    SyscallRemainingComputeUnits,
+    fn inner_call(
+        invoke_context: &mut InvokeContext,
+        _arg1: u64,
+        _arg2: u64,
+        _arg3: u64,
+        _arg4: u64,
+        _arg5: u64,
+        _memory_mapping: &mut MemoryMapping,
+    ) -> Result<u64, Error> {
+        let budget = invoke_context.get_compute_budget();
+        consume_compute_meter(invoke_context, budget.syscall_base_cost)?;
+
+        use solana_rbpf::vm::ContextObject;
+        Ok(invoke_context.get_remaining())
     }
 );
 

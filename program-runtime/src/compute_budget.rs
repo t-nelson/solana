@@ -122,6 +122,8 @@ pub struct ComputeBudget {
     /// Maximum accounts data size, in bytes, that a transaction is allowed to load; The
     /// value is capped by MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES to prevent overuse of memory.
     pub loaded_accounts_data_size_limit: usize,
+    /// Number of compute units consumed for accessing the remaining compute units.
+    pub get_remaining_compute_units_cost: u64,
 }
 
 impl Default for ComputeBudget {
@@ -171,6 +173,7 @@ impl ComputeBudget {
             alt_bn128_pairing_one_pair_cost_other: 12_121,
             big_modular_exponentiation_cost: 33,
             loaded_accounts_data_size_limit: MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES,
+            get_remaining_compute_units_cost: 100,
         }
     }
 
