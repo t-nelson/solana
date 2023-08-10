@@ -32,8 +32,8 @@ pub fn process_instruction(
         sysvar::clock::id().log();
         let clock = Clock::from_account_info(&accounts[2]).unwrap();
         assert_ne!(clock, Clock::default());
-        let got_clock = Clock::get()?;
-        assert_eq!(clock, got_clock);
+        let got_clock = Clock::get();
+        assert_eq!(Ok(clock), got_clock);
     }
 
     // Epoch Schedule
@@ -42,8 +42,8 @@ pub fn process_instruction(
         sysvar::epoch_schedule::id().log();
         let epoch_schedule = EpochSchedule::from_account_info(&accounts[3]).unwrap();
         assert_eq!(epoch_schedule, EpochSchedule::default());
-        let got_epoch_schedule = EpochSchedule::get()?;
-        assert_eq!(epoch_schedule, got_epoch_schedule);
+        let got_epoch_schedule = EpochSchedule::get();
+        assert_eq!(Ok(epoch_schedule), got_epoch_schedule);
     }
 
     // Instructions
@@ -90,8 +90,8 @@ pub fn process_instruction(
         sysvar::rent::id().log();
         let rent = Rent::from_account_info(&accounts[6]).unwrap();
         assert_eq!(rent, Rent::default());
-        let got_rent = Rent::get()?;
-        assert_eq!(rent, got_rent);
+        let got_rent = Rent::get();
+        assert_eq!(Ok(rent), got_rent);
     }
 
     // Slot Hashes
@@ -121,8 +121,8 @@ pub fn process_instruction(
         msg!("Fee identifier:");
         sysvar::fees::id().log();
         let fees = Fees::from_account_info(&accounts[10]).unwrap();
-        let got_fees = Fees::get()?;
-        assert_eq!(fees, got_fees);
+        let got_fees = Fees::get();
+        assert_eq!(Ok(fees), got_fees);
     }
 
     // Epoch Rewards
