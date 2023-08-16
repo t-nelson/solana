@@ -137,7 +137,7 @@ pub fn unique_signers(signers: Vec<&dyn Signer>) -> Vec<&dyn Signer> {
 }
 
 /// Marker trait for `Signers`s that provide ed25519 support
-pub trait Ed25519Provider {}
+pub trait Ed25519Provider: Signer {}
 
 /// The `EncodableKey` trait defines the interface by which cryptographic keys/keypairs are read,
 /// written, and derived from sources.
