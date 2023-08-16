@@ -5,7 +5,9 @@ use {
         derivation_path::DerivationPath,
         pubkey::Pubkey,
         signature::Signature,
-        signer::{EncodableKey, EncodableKeypair, SeedDerivable, Signer, SignerError},
+        signer::{
+            Ed25519Provider, EncodableKey, EncodableKeypair, SeedDerivable, Signer, SignerError,
+        },
     },
     ed25519_dalek::Signer as DalekSigner,
     ed25519_dalek_bip32::Error as Bip32Error,
@@ -126,6 +128,8 @@ where
         self.pubkey() == other.pubkey()
     }
 }
+
+impl Ed25519Provider for Keypair {}
 
 impl EncodableKey for Keypair {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Box<dyn error::Error>> {

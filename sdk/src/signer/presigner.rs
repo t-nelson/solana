@@ -4,7 +4,7 @@ use {
     crate::{
         pubkey::Pubkey,
         signature::Signature,
-        signer::{Signer, SignerError},
+        signer::{Ed25519Provider, Signer, SignerError},
     },
     thiserror::Error,
 };
@@ -60,6 +60,8 @@ where
         self.pubkey() == other.pubkey()
     }
 }
+
+impl Ed25519Provider for Presigner {}
 
 #[cfg(test)]
 mod tests {

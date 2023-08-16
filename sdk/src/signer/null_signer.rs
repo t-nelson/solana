@@ -3,7 +3,7 @@
 use crate::{
     pubkey::Pubkey,
     signature::Signature,
-    signer::{Signer, SignerError},
+    signer::{Ed25519Provider, Signer, SignerError},
 };
 
 /// NullSigner - A `Signer` implementation that always produces `Signature::default()`.
@@ -42,3 +42,5 @@ where
         self.pubkey == other.pubkey()
     }
 }
+
+impl Ed25519Provider for NullSigner {}
