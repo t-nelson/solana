@@ -1,4 +1,5 @@
 #![cfg(feature = "full")]
+#![deprecated(since = "1.17.0", note = "it's time")]
 
 use {
     crate::{
