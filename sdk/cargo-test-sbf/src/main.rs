@@ -61,7 +61,7 @@ where
     let args = args.into_iter().collect::<Vec<_>>();
     let mut msg = format!("spawn: {}", program.display());
     for arg in args.iter() {
-        msg = msg + &format!(" {}", arg.as_ref().to_str().unwrap_or("?")).to_string();
+        msg.extend(format!(" {}", arg.as_ref().to_str().unwrap_or("?")).chars());
     }
     info!("{}", msg);
 

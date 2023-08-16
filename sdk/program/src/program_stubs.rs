@@ -22,7 +22,7 @@ pub fn set_syscall_stubs(syscall_stubs: Box<dyn SyscallStubs>) -> Box<dyn Syscal
     std::mem::replace(&mut SYSCALL_STUBS.write().unwrap(), syscall_stubs)
 }
 
-#[allow(clippy::integer_arithmetic)]
+#[allow(clippy::arithmetic_side_effects)]
 pub trait SyscallStubs: Sync + Send {
     fn sol_log(&self, message: &str) {
         println!("{message}");
@@ -228,6 +228,7 @@ where
 {
     // If the absolute distance between the ptrs is at least as big as the size of the other,
     // they do not overlap.
+    #[allow(clippy::arithmetic_side_effects)]
     if src > dst {
         src - dst >= dst_len
     } else {

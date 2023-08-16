@@ -1,3 +1,4 @@
+#![allow(clippy::arithmetic_side_effects)]
 pub mod prelude {
     pub use crate::alt_bn128::{consts::*, target_arch::*, AltBn128Error};
 }

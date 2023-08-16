@@ -6,7 +6,7 @@
 )]
 pub use solana_sdk::stake::config::*;
 #[allow(deprecated)]
-use solana_sdk::stake::config::{self, Config};
+use solana_sdk::stake::config;
 use {
     bincode::deserialize,
     solana_config_program::{create_config_account, get_config_data},
