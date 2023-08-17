@@ -530,7 +530,7 @@ pub mod test_mocks {
             self.points_written
                 .lock()
                 .unwrap()
-                .extend(points.into_iter());
+                .extend(points);
 
             info!(
                 "Writing {} points ({} total)",

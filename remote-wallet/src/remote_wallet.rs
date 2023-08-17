@@ -95,6 +95,12 @@ pub struct RemoteWalletManager {
     devices: RwLock<Vec<Device>>,
 }
 
+// `Send` and `Sync` are not automatically derived on `RemoteWalletManager`.
+// maybe due to `hidapi::HidDevice` being `!Sync`? both members are wrapped with
+// locks, so should be fine to manually implement.
+unsafe impl Send for RemoteWalletManager { }
+unsafe impl Sync for RemoteWalletManager { }
+
 impl RemoteWalletManager {
     /// Create a new instance.
     #[cfg(feature = "hidapi")]
@@ -307,21 +313,11 @@ pub fn is_valid_hid_device(usage_page: u16, interface_number: i32) -> bool {
     usage_page == HID_GLOBAL_USAGE_PAGE || interface_number == HID_USB_DEVICE_CLASS as i32
 }
 
-/// Helper to initialize hidapi and RemoteWalletManager
 #[cfg(feature = "hidapi")]
-pub fn initialize_wallet_manager() -> Result<Arc<RemoteWalletManager>, RemoteWalletError> {
-    let hidapi = Arc::new(Mutex::new(hidapi::HidApi::new()?));
-    Ok(RemoteWalletManager::new(hidapi))
-}
-#[cfg(not(feature = "hidapi"))]
-pub fn initialize_wallet_manager() -> Result<Arc<RemoteWalletManager>, RemoteWalletError> {
-    Err(RemoteWalletError::Hid(
-        "hidapi crate compilation disabled in solana-remote-wallet.".to_string(),
-    ))
-}
-
 pub fn maybe_wallet_manager() -> Result<Option<Arc<RemoteWalletManager>>, RemoteWalletError> {
-    let wallet_manager = initialize_wallet_manager()?;
+    let wallet_manager = RemoteWalletManager::new(
+        Arc::new(Mutex::new(hidapi::HidApi::new()?))
+    );
     let device_count = wallet_manager.update_devices()?;
     if device_count > 0 {
         Ok(Some(wallet_manager))
@@ -329,6 +325,11 @@ pub fn maybe_wallet_manager() -> Result<Option<Arc<RemoteWalletManager>>, Remote
         drop(wallet_manager);
         Ok(None)
     }
+}
+
+#[cfg(not(feature = "hidapi"))]
+pub fn maybe_wallet_manager() -> Result<Option<Arc<RemoteWalletManager>>, RemoteWalletError> {
+    Ok(None)
 }
 
 #[cfg(test)]

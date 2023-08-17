@@ -1267,7 +1267,7 @@ mod tests {
         super::*,
         crate::offline::OfflineArgs,
         clap::{Arg, Command},
-        solana_remote_wallet::{locator::Manufacturer, remote_wallet::initialize_wallet_manager},
+        solana_remote_wallet::locator::Manufacturer,
         solana_sdk::{signer::keypair::write_keypair_file, system_instruction},
         tempfile::{NamedTempFile, TempDir},
     };
@@ -1453,13 +1453,11 @@ mod tests {
         let clap_matches = clap_app.get_matches_from(args);
         let keypair_str: String = clap_matches.value_of_t_or_exit("keypair");
 
-        let wallet_manager = initialize_wallet_manager()?;
-
         let signer = signer_from_path(
             &clap_matches,
             &keypair_str,
             "signer",
-            &mut Some(wallet_manager),
+            &mut None,
         )?;
 
         assert_eq!(keypair.pubkey(), signer.pubkey());

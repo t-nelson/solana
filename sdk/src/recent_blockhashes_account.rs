@@ -97,7 +97,7 @@ mod tests {
 
     #[test]
     fn test_create_account_empty() {
-        let account = create_account_with_data_for_test(vec![].into_iter());
+        let account = create_account_with_data_for_test(vec![]);
         let recent_blockhashes = from_account::<RecentBlockhashes, _>(&account).unwrap();
         assert_eq!(recent_blockhashes, RecentBlockhashes::default());
     }
@@ -107,7 +107,7 @@ mod tests {
         let def_hash = Hash::default();
         let def_lamports_per_signature = 0;
         let account = create_account_with_data_for_test(
-            vec![IterItem(0u64, &def_hash, def_lamports_per_signature); MAX_ENTRIES].into_iter(),
+            vec![IterItem(0u64, &def_hash, def_lamports_per_signature); MAX_ENTRIES],
         );
         let recent_blockhashes = from_account::<RecentBlockhashes, _>(&account).unwrap();
         assert_eq!(recent_blockhashes.len(), MAX_ENTRIES);
@@ -118,8 +118,7 @@ mod tests {
         let def_hash = Hash::default();
         let def_lamports_per_signature = 0;
         let account = create_account_with_data_for_test(
-            vec![IterItem(0u64, &def_hash, def_lamports_per_signature); MAX_ENTRIES + 1]
-                .into_iter(),
+            vec![IterItem(0u64, &def_hash, def_lamports_per_signature); MAX_ENTRIES + 1],
         );
         let recent_blockhashes = from_account::<RecentBlockhashes, _>(&account).unwrap();
         assert_eq!(recent_blockhashes.len(), MAX_ENTRIES);
