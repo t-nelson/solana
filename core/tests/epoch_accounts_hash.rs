@@ -253,8 +253,11 @@ impl Drop for BackgroundServices {
 
 /// Ensure that EAHs are requested, calculated, and awaited correctly.
 /// Test both with and without snapshots to make sure they don't interfere with EAH.
+#[allow(clippy::items_after_test_module)]
 #[test_case(TestEnvironment::new()                      ; "without snapshots")]
+#[allow(clippy::items_after_test_module)]
 #[test_case(TestEnvironment::new_with_snapshots(80, 40) ; "with snapshots")]
+#[allow(clippy::items_after_test_module)]
 fn test_epoch_accounts_hash_basic(test_environment: TestEnvironment) {
     solana_logger::setup();
 
@@ -664,6 +667,7 @@ fn test_epoch_accounts_hash_and_warping() {
 // https://github.com/rust-lang/rust/issues/88581
 // https://github.com/rust-lang/rust/pull/88582
 // https://github.com/jhpratt/rust/blob/727a4fc7e3f836938dfeb4a2ab237cfca612222d/library/core/src/num/uint_macros.rs#L1811-L1837
+#[allow(clippy::items_after_test_module)]
 const fn next_multiple_of(lhs: u64, rhs: u64) -> u64 {
     #![allow(clippy::arithmetic_side_effects)]
     match lhs % rhs {
