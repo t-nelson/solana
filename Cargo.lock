@@ -6125,6 +6125,7 @@ dependencies = [
  "solana-bpf-loader-program",
  "solana-compute-budget-program",
  "solana-config-program",
+ "solana-feature-set",
  "solana-frozen-abi",
  "solana-loader-v4-program",
  "solana-sdk",

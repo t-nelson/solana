@@ -3,6 +3,7 @@
 use {
     ahash::AHashMap,
     lazy_static::lazy_static,
+    solana_feature_set::{self as feature_set, FeatureSet},
     solana_sdk::{
         address_lookup_table, bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
         compute_budget, ed25519_program, loader_v4, pubkey::Pubkey, secp256k1_program,
@@ -108,7 +109,7 @@ static_assertions::const_assert_eq!(
 
 pub const MIGRATING_BUILTINS_COSTS: &[(Pubkey, BuiltinCost)] = &[
     (
-        stake::id(),
+        solana_stake_program::id(),
         BuiltinCost::Migrating(MigratingBuiltinCost {
             native_cost: solana_stake_program::stake_instruction::DEFAULT_COMPUTE_UNITS,
             core_bpf_migration_feature: feature_set::migrate_stake_program_to_core_bpf::id(),
@@ -116,7 +117,7 @@ pub const MIGRATING_BUILTINS_COSTS: &[(Pubkey, BuiltinCost)] = &[
         }),
     ),
     (
-        config::id(),
+        solana_config_program::id(),
         BuiltinCost::Migrating(MigratingBuiltinCost {
             native_cost: solana_config_program::config_processor::DEFAULT_COMPUTE_UNITS,
             core_bpf_migration_feature: feature_set::migrate_config_program_to_core_bpf::id(),
@@ -124,7 +125,7 @@ pub const MIGRATING_BUILTINS_COSTS: &[(Pubkey, BuiltinCost)] = &[
         }),
     ),
     (
-        address_lookup_table::id(),
+        address_lookup_table::program::id(),
         BuiltinCost::Migrating(MigratingBuiltinCost {
             native_cost: solana_address_lookup_table_program::processor::DEFAULT_COMPUTE_UNITS,
             core_bpf_migration_feature:
@@ -136,13 +137,13 @@ pub const MIGRATING_BUILTINS_COSTS: &[(Pubkey, BuiltinCost)] = &[
 
 pub const NON_MIGRATING_BUILTINS_COSTS: &[(Pubkey, BuiltinCost)] = &[
     (
-        vote::id(),
+        solana_vote_program::id(),
         BuiltinCost::NotMigrating(NotMigratingBuiltinCost {
             native_cost: solana_vote_program::vote_processor::DEFAULT_COMPUTE_UNITS,
         }),
     ),
     (
-        system_program::id(),
+        solana_system_program::id(),
         BuiltinCost::NotMigrating(NotMigratingBuiltinCost {
             native_cost: solana_system_program::system_processor::DEFAULT_COMPUTE_UNITS,
         }),
