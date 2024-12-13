@@ -298,11 +298,15 @@ mod test {
         // use native cost if migration is planned but not activated
         assert_eq!(
             Some(solana_stake_program::stake_instruction::DEFAULT_COMPUTE_UNITS),
-            get_builtin_instruction_cost(&stake::id(), &FeatureSet::default())
+            get_builtin_instruction_cost(&solana_stake_program::id(), &FeatureSet::default())
         );
 
         // None if migration is planned and activated, in which case, it's no longer builtin
-        assert!(get_builtin_instruction_cost(&stake::id(), &FeatureSet::all_enabled()).is_none());
+        assert!(get_builtin_instruction_cost(
+            &solana_stake_program::id(),
+            &FeatureSet::all_enabled()
+        )
+        .is_none());
 
         // None if not builtin
         assert!(
@@ -324,7 +328,7 @@ mod test {
             get_builtin_migration_feature_index(&compute_budget::id()),
             BuiltinMigrationFeatureIndex::BuiltinNoMigrationFeature,
         ));
-        let feature_index = get_builtin_migration_feature_index(&stake::id());
+        let feature_index = get_builtin_migration_feature_index(&solana_stake_program::id());
         assert!(matches!(
             feature_index,
             BuiltinMigrationFeatureIndex::BuiltinWithMigrationFeature(_)
@@ -338,7 +342,7 @@ mod test {
             get_migration_feature_id(feature_index),
             &feature_set::migrate_stake_program_to_core_bpf::id()
         );
-        let feature_index = get_builtin_migration_feature_index(&config::id());
+        let feature_index = get_builtin_migration_feature_index(&solana_config_program::id());
         assert!(matches!(
             feature_index,
             BuiltinMigrationFeatureIndex::BuiltinWithMigrationFeature(_)
@@ -352,7 +356,8 @@ mod test {
             get_migration_feature_id(feature_index),
             &feature_set::migrate_config_program_to_core_bpf::id()
         );
-        let feature_index = get_builtin_migration_feature_index(&address_lookup_table::id());
+        let feature_index =
+            get_builtin_migration_feature_index(&address_lookup_table::program::id());
         assert!(matches!(
             feature_index,
             BuiltinMigrationFeatureIndex::BuiltinWithMigrationFeature(_)
