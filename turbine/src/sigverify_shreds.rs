@@ -6,7 +6,7 @@ use {
     crossbeam_channel::{Receiver, RecvTimeoutError, SendError, Sender},
     itertools::{Either, Itertools},
     rayon::{prelude::*, ThreadPool, ThreadPoolBuilder},
-    solana_feature_set as feature_set,
+    agave_feature_set as feature_set,
     solana_gossip::cluster_info::ClusterInfo,
     solana_ledger::{
         leader_schedule_cache::LeaderScheduleCache,

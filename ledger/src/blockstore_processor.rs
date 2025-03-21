@@ -317,7 +317,7 @@ fn check_block_cost_limits_if_enabled(
 ) -> Result<()> {
     let (check_block_cost_limits_result, check_block_cost_limits_us) = measure_us!(if bank
         .feature_set
-        .is_active(&solana_feature_set::apply_cost_tracker_during_replay::id())
+        .is_active(&agave_feature_set::apply_cost_tracker_during_replay::id())
     {
         check_block_cost_limits(bank, processing_results, batch.sanitized_transactions())
     } else {
@@ -2166,7 +2166,7 @@ pub fn process_single_slot(
         result?
     }
 
-    let block_id = blockstore.check_last_fec_set_and_get_block_id(slot, bank.hash(), &bank.feature_set)
+    let block_id = blockstore.check_last_fec_set_and_get_block_id(slot, bank.hash(), bank.feature_set.as_ref())
         .inspect_err(|err| {
             warn!("slot {} failed last fec set checks: {}", slot, err);
             if blockstore.is_primary_access() {
@@ -3443,7 +3443,7 @@ pub mod tests {
         if should_run_partitioned_rent_collection {
             genesis_config
                 .accounts
-                .remove(&solana_feature_set::disable_partitioned_rent_collection::id());
+                .remove(&agave_feature_set::disable_partitioned_rent_collection::id());
         }
 
         fn get_instruction_errors() -> Vec<InstructionError> {

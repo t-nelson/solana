@@ -21,7 +21,7 @@ use {
     solana_entry::poh::compute_hashes_per_tick,
     solana_epoch_schedule::EpochSchedule,
     solana_feature_gate_interface as feature,
-    solana_feature_set::FEATURE_NAMES,
+    agave_feature_set::FEATURE_NAMES,
     solana_fee_calculator::FeeRateGovernor,
     solana_genesis::{
         genesis_accounts::add_genesis_accounts, Base64Account, StakedValidatorAccountInfo,

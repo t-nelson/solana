@@ -41,7 +41,7 @@ use {
         tpu_client::{TpuClient, TpuClientConfig},
     },
     solana_commitment_config::CommitmentConfig,
-    solana_feature_set::{FeatureSet, FEATURE_NAMES},
+    agave_feature_set::{FeatureSet, FEATURE_NAMES},
     solana_instruction::{error::InstructionError, Instruction},
     solana_keypair::{keypair_from_seed, read_keypair_file, Keypair},
     solana_loader_v3_interface::{
@@ -1388,7 +1388,7 @@ fn process_program_deploy(
     };
 
     if !skip_feature_verification
-        && feature_set.is_active(&solana_feature_set::enable_loader_v4::id())
+        && feature_set.is_active(&agave_feature_set::enable_loader_v4::id())
     {
         warn!("Loader-v4 is available now. Please migrate your program.");
     }

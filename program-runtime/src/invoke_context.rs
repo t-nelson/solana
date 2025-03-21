@@ -11,7 +11,7 @@ use {
     solana_account::{create_account_shared_data_for_test, AccountSharedData},
     solana_clock::Slot,
     solana_epoch_schedule::EpochSchedule,
-    solana_feature_set::{
+    agave_feature_set::{
         lift_cpi_caller_restriction, move_precompile_verification_to_svm,
         remove_accounts_executable_flag_checks, FeatureSet,
     },
@@ -740,7 +740,7 @@ macro_rules! with_mock_invoke_context {
         $transaction_accounts:expr $(,)?
     ) => {
         use {
-            solana_feature_set::FeatureSet,
+            agave_feature_set::FeatureSet,
             solana_log_collector::LogCollector,
             solana_type_overrides::sync::Arc,
             $crate::{

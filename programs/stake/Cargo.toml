@@ -16,7 +16,7 @@ solana-account = { workspace = true }
 solana-bincode = { workspace = true }
 solana-clock = { workspace = true }
 solana-config-program = { workspace = true }
-solana-feature-set = { workspace = true }
+agave-feature-set = { workspace = true }
 solana-genesis-config = { workspace = true }
 solana-instruction = { workspace = true }
 solana-log-collector = { workspace = true }

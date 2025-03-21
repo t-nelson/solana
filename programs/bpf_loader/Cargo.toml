@@ -24,7 +24,8 @@ solana-bn254 = { workspace = true }
 solana-clock = { workspace = true }
 solana-cpi = { workspace = true }
 solana-curve25519 = { workspace = true }
-solana-feature-set = { workspace = true }
+agave-feature-set = { workspace = true }
+solana-feature-set-interface = { workspace = true }
 solana-hash = { workspace = true }
 solana-instruction = { workspace = true }
 solana-keccak-hasher = { workspace = true }

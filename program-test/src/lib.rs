@@ -12,7 +12,7 @@ use {
     solana_banks_client::start_client,
     solana_banks_server::banks_server::start_local_server,
     solana_compute_budget::compute_budget::ComputeBudget,
-    solana_feature_set::FEATURE_NAMES,
+    agave_feature_set::FEATURE_NAMES,
     solana_instruction::{error::InstructionError, Instruction},
     solana_log_collector::ic_msg,
     solana_program_runtime::{

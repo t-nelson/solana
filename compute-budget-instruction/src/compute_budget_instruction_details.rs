@@ -7,7 +7,7 @@ use {
     solana_builtins_default_costs::{get_migration_feature_id, MIGRATING_BUILTINS_COSTS},
     solana_compute_budget::compute_budget_limits::*,
     solana_compute_budget_interface::ComputeBudgetInstruction,
-    solana_feature_set::{self as feature_set, FeatureSet},
+    agave_feature_set::{self as feature_set, FeatureSet},
     solana_instruction::error::InstructionError,
     solana_pubkey::Pubkey,
     solana_svm_transaction::instruction::SVMInstruction,

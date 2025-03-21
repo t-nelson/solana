@@ -29,7 +29,7 @@ use {
         },
         tpu_client::{TpuClient, TpuClientConfig},
     },
-    solana_feature_set::{FeatureSet, FEATURE_NAMES},
+    agave_feature_set::{FeatureSet, FEATURE_NAMES},
     solana_instruction::Instruction,
     solana_loader_v4_interface::{
         instruction,

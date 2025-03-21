@@ -11,7 +11,7 @@ use {
         BankingStageStats,
     },
     itertools::Itertools,
-    solana_feature_set as feature_set,
+    agave_feature_set as feature_set,
     solana_fee::FeeFeatures,
     solana_ledger::token_balances::collect_token_balances,
     solana_measure::{measure::Measure, measure_us},

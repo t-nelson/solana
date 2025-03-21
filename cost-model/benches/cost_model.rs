@@ -2,7 +2,7 @@
 extern crate test;
 use {
     solana_cost_model::cost_model::CostModel,
-    solana_feature_set::FeatureSet,
+    agave_feature_set::FeatureSet,
     solana_hash::Hash,
     solana_keypair::Keypair,
     solana_message::Message,

@@ -9,6 +9,7 @@ use {
     },
     solana_account::PROGRAM_OWNERS,
     solana_compute_budget_instruction::instructions_processor::process_compute_budget_instructions,
+    agave_feature_set::{self as feature_set, FeatureSet},
     solana_fee_structure::FeeDetails,
     solana_program_runtime::execution_budget::SVMTransactionExecutionAndFeeBudgetLimits,
     solana_sdk::{
@@ -17,7 +18,6 @@ use {
         clock::Slot,
         compute_budget::ComputeBudgetInstruction,
         entrypoint::MAX_PERMITTED_DATA_INCREASE,
-        feature_set::{self, FeatureSet},
         hash::Hash,
         instruction::{AccountMeta, Instruction},
         native_loader,

@@ -6,7 +6,7 @@ use {
         iter::IndexedParallelIterator,
         prelude::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
     },
-    solana_feature_set::apply_cost_tracker_during_replay,
+    agave_feature_set::apply_cost_tracker_during_replay,
     solana_ledger::{
         blockstore_processor::{execute_batch, TransactionBatchWithIndexes},
         genesis_utils::{create_genesis_config, GenesisConfigInfo},

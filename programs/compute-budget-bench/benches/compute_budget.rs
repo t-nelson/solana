@@ -3,7 +3,7 @@ use {
     solana_compute_budget::compute_budget_limits::ComputeBudgetLimits,
     solana_compute_budget_instruction::instructions_processor::process_compute_budget_instructions,
     solana_compute_budget_interface::ComputeBudgetInstruction,
-    solana_feature_set::FeatureSet,
+    agave_feature_set::FeatureSet,
     solana_message::compiled_instruction::CompiledInstruction,
     solana_svm_transaction::instruction::SVMInstruction,
     std::num::NonZero,

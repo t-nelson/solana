@@ -295,7 +295,7 @@ mod tests {
     use {
         super::*,
         crate::cost_model::CostModel,
-        solana_feature_set::FeatureSet,
+        agave_feature_set::FeatureSet,
         solana_hash::Hash,
         solana_keypair::Keypair,
         solana_message::SimpleAddressLoader,

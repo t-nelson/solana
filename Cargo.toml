@@ -47,7 +47,7 @@ members = [
     "dos",
     "download-utils",
     "entry",
-    "faucet",
+    "faucet", "feature-set",
     "fee",
     "genesis",
     "genesis-utils",
@@ -174,6 +174,7 @@ check-cfg = [
 Inflector = "0.11.4"
 axum = "0.7.9"
 agave-banking-stage-ingress-types = { path = "banking-stage-ingress-types", version = "=2.3.0" }
+agave-feature-set = { path = "feature-set", version = "=2.3.0" }
 agave-transaction-view = { path = "transaction-view", version = "=2.3.0" }
 aquamarine = "0.6.0"
 aes-gcm-siv = "0.11.1"
@@ -404,6 +405,7 @@ solana-derivation-path = "=2.2.1"
 solana-download-utils = { path = "download-utils", version = "=2.3.0" }
 solana-ed25519-program = "=2.2.1"
 solana-entry = { path = "entry", version = "=2.3.0" }
+solana-feature-set-interface = "=2.2.4"
 solana-program-entrypoint = "=2.2.1"
 solana-epoch-info = "=2.2.1"
 solana-epoch-rewards = "=2.2.1"
@@ -413,7 +415,6 @@ solana-example-mocks = "=2.2.1"
 solana-faucet = { path = "faucet", version = "=2.3.0" }
 solana-feature-gate-client = "0.0.2"
 solana-feature-gate-interface = "=2.2.1"
-solana-feature-set = "=2.2.4"
 solana-fee-calculator = "=2.2.1"
 solana-fee = { path = "fee", version = "=2.3.0" }
 solana-fee-structure = "=2.2.1"
@@ -465,7 +466,7 @@ solana-poh = { path = "poh", version = "=2.3.0" }
 solana-poh-config = "=2.2.1"
 solana-poseidon = { path = "poseidon", version = "=2.3.0" }
 solana-precompile-error = "=2.2.1"
-solana-precompiles = "=2.2.1"
+solana-precompiles = { version = "=2.2.1", path = "../solana-sdk/precompiles" }
 solana-presigner = "=2.2.1"
 solana-program = { version = "=2.2.1", default-features = false }
 solana-program-error = "=2.2.1"
@@ -657,3 +658,33 @@ crossbeam-epoch = { git = "https://github.com/anza-xyz/crossbeam", rev = "fd279d
 # comments and the overrides in sync.
 solana-curve25519 = { path = "curves/curve25519" }
 solana-zk-sdk = { path = "zk-sdk" }
+
+solana-clock = { path = "../solana-sdk/clock" }
+solana-cpi = { path = "../solana-sdk/cpi" }
+solana-decode-error = { path = "../solana-sdk/decode-error" }
+solana-frozen-abi = { path = "../solana-sdk/frozen-abi" }
+solana-frozen-abi-macro = { path = "../solana-sdk/frozen-abi-macro" }
+solana-instruction = { path = "../solana-sdk/instruction" }
+solana-program-error = { path = "../solana-sdk/program-error" }
+solana-pubkey = { path = "../solana-sdk/pubkey" }
+solana-sysvar-id = { path = "../solana-sdk/sysvar-id" }
+solana-account-info = { path = "../solana-sdk/account-info" }
+solana-sanitize = { path = "../solana-sdk/sanitize" }
+solana-precompiles = { path = "../solana-sdk/precompiles" }
+solana-transaction = { path = "../solana-sdk/transaction" }
+solana-message = { path = "../solana-sdk/message" }
+solana-hash = { path = "../solana-sdk/hash" }
+solana-signature = { path = "../solana-sdk/signature" }
+solana-feature-set-interface = { path = "../solana-sdk/feature-set-interface" }
+solana-signer = { path = "../solana-sdk/signer" }
+solana-transaction-error = { path = "../solana-sdk/transaction-error" }
+solana-reserved-account-keys = { path = "../solana-sdk/reserved-account-keys" }
+solana-account = { path = "../solana-sdk/account" }
+solana-sysvar = { path = "../solana-sdk/sysvar" }
+solana-epoch-schedule = { path = "../solana-sdk/epoch-schedule" }
+solana-slot-hashes = { path = "../solana-sdk/slot-hashes" }
+solana-last-restart-slot = { path = "../solana-sdk/last-restart-slot" }
+solana-rent = { path = "../solana-sdk/rent" }
+solana-epoch-rewards = { path = "../solana-sdk/epoch-rewards" }
+solana-fee-calculator = { path = "../solana-sdk/fee-calculator" }
+solana-slot-history = { path = "../solana-sdk/slot-history" }

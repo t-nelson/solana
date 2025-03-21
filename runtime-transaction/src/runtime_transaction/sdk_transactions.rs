@@ -154,7 +154,7 @@ mod tests {
     use {
         super::*,
         solana_compute_budget_interface::ComputeBudgetInstruction,
-        solana_feature_set::FeatureSet,
+        agave_feature_set::FeatureSet,
         solana_hash::Hash,
         solana_instruction::Instruction,
         solana_keypair::Keypair,

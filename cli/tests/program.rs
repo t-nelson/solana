@@ -15,7 +15,7 @@ use {
     solana_client::rpc_config::RpcSendTransactionConfig,
     solana_commitment_config::CommitmentConfig,
     solana_faucet::faucet::run_local_faucet,
-    solana_feature_set::enable_alt_bn128_syscall,
+    agave_feature_set::enable_alt_bn128_syscall,
     solana_rpc::rpc::JsonRpcConfig,
     solana_rpc_client::rpc_client::{GetConfirmedSignaturesForAddress2Config, RpcClient},
     solana_rpc_client_api::config::RpcTransactionConfig,

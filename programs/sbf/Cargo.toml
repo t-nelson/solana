@@ -42,7 +42,8 @@ solana-compute-budget = { path = "../../compute-budget", version = "=2.3.0" }
 solana-compute-budget-instruction = { path = "../../compute-budget-instruction", version = "=2.3.0" }
 solana-curve25519 = { path = "../../curves/curve25519", version = "=2.3.0" }
 solana-decode-error = "=2.2.1"
-solana-feature-set = "=2.2.4"
+agave-feature-set = { version = "=2.3.0", path = "../../feature-set" }
+solana-feature-set-interface = "2.2.4"
 solana-fee = { path = "../../fee", version = "=2.3.0" }
 solana-ledger = { path = "../../ledger", version = "=2.3.0" }
 solana-log-collector = { path = "../../log-collector", version = "=2.3.0" }
@@ -102,6 +103,7 @@ dummy-for-ci-check = ["sbf_c", "sbf_rust"]
 frozen-abi = []
 
 [dev-dependencies]
+agave-feature-set = { version = "=2.3.0", path = "../../feature-set" }
 agave-validator = { workspace = true }
 bincode = { workspace = true }
 borsh = { workspace = true }
@@ -119,7 +121,7 @@ solana-compute-budget = { workspace = true }
 solana-compute-budget-instruction = { workspace = true, features = [
     "dev-context-only-utils",
 ] }
-solana-feature-set = { workspace = true }
+# agave-feature-set = { workspace = true }
 solana-fee = { workspace = true }
 solana-ledger = { workspace = true }
 solana-log-collector = { workspace = true }
@@ -252,3 +254,19 @@ members = [
 # and the overrides in sync.
 solana-curve25519 = { path = "../../curves/curve25519" }
 solana-zk-sdk = { path = "../../zk-sdk" }
+solana-feature-set-interface = { path = "../../../solana-sdk/feature-set-interface" }
+solana-pubkey = { path = "../../../solana-sdk/pubkey" }
+solana-sanitize = { path = "../../../solana-sdk/sanitize" }
+solana-reserved-account-keys = { path = "../../../solana-sdk/reserved-account-keys" }
+solana-precompiles = { path = "../../../solana-sdk/precompiles" }
+solana-transaction = { path = "../../../solana-sdk/transaction" }
+solana-message = { path = "../../../solana-sdk/message" }
+solana-instruction = { path = "../../../solana-sdk/instruction" }
+solana-signature = { path = "../../../solana-sdk/signature" }
+solana-hash = { path = "../../../solana-sdk/hash" }
+solana-signer = { path = "../../../solana-sdk/signer" }
+solana-system-transaction = { path = "../../../solana-sdk/system-transaction" }
+solana-keypair = { path = "../../../solana-sdk/keypair" }
+solana-derivation-path = { path = "../../../solana-sdk/derivation-path" }
+solana-transaction-error = { path = "../../../solana-sdk/transaction-error" }
+solana-seed-derivable = { path = "../../../solana-sdk/seed-derivable" }

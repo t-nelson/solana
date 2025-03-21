@@ -6,7 +6,7 @@ use {
     lazy_static::lazy_static,
     prost::Message,
     solana_bpf_loader_program::syscalls::create_program_runtime_environment_v1,
-    solana_feature_set::{FeatureSet, FEATURE_NAMES},
+    agave_feature_set::{FeatureSet, FEATURE_NAMES},
     solana_log_collector::LogCollector,
     solana_program_runtime::{
         execution_budget::{SVMTransactionExecutionBudget, SVMTransactionExecutionCost},

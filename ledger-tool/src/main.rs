@@ -39,7 +39,7 @@ use {
         validator::{BlockProductionMethod, BlockVerificationMethod, TransactionStructure},
     },
     solana_cost_model::{cost_model::CostModel, cost_tracker::CostTracker},
-    solana_feature_set::{self as feature_set, FeatureSet},
+    agave_feature_set::{self as feature_set, FeatureSet},
     solana_ledger::{
         blockstore::{banking_trace_path, create_new_ledger, Blockstore},
         blockstore_options::{AccessType, LedgerColumnOptions},

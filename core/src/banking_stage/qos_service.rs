@@ -8,7 +8,7 @@ use {
     solana_cost_model::{
         cost_model::CostModel, cost_tracker::UpdatedCosts, transaction_cost::TransactionCost,
     },
-    solana_feature_set::FeatureSet,
+    agave_feature_set::FeatureSet,
     solana_measure::measure::Measure,
     solana_runtime::bank::Bank,
     solana_runtime_transaction::transaction_with_meta::TransactionWithMeta,

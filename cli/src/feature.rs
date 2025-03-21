@@ -22,7 +22,7 @@ use {
         errors::SolanaFeatureGateError, instructions::RevokePendingActivation,
     },
     solana_feature_gate_interface::{activate_with_lamports, from_account, Feature},
-    solana_feature_set::FEATURE_NAMES,
+    agave_feature_set::FEATURE_NAMES,
     solana_message::Message,
     solana_pubkey::Pubkey,
     solana_remote_wallet::remote_wallet::RemoteWalletManager,

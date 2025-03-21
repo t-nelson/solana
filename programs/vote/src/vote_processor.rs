@@ -4,7 +4,7 @@ use {
     crate::vote_state,
     log::*,
     solana_bincode::limited_deserialize,
-    solana_feature_set as feature_set,
+    agave_feature_set as feature_set,
     solana_instruction::error::InstructionError,
     solana_program_runtime::{
         declare_process_instruction, invoke_context::InvokeContext,

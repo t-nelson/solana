@@ -19,7 +19,7 @@ solana-address-lookup-table-interface = { workspace = true, features = [
     "bincode",
     "bytemuck",
 ] }
-solana-feature-set = { workspace = true }
+agave-feature-set = { workspace = true }
 thiserror = { workspace = true }
 
 [target.'cfg(not(target_os = "solana"))'.dependencies]

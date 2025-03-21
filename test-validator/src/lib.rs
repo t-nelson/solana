@@ -15,7 +15,7 @@ use {
         consensus::tower_storage::TowerStorage,
         validator::{Validator, ValidatorConfig, ValidatorStartProgress, ValidatorTpuConfig},
     },
-    solana_feature_set::FEATURE_NAMES,
+    agave_feature_set::{FeatureSet, FEATURE_NAMES},
     solana_geyser_plugin_manager::{
         geyser_plugin_manager::GeyserPluginManager, GeyserPluginManagerRequest,
     },
@@ -30,6 +30,7 @@ use {
         create_new_tmp_ledger,
     },
     solana_net_utils::PortRange,
+    solana_pubkey::Pubkey,
     solana_rpc::{rpc::JsonRpcConfig, rpc_pubsub_service::PubSubConfig},
     solana_rpc_client::{nonblocking, rpc_client::RpcClient},
     solana_rpc_client_api::request::MAX_MULTIPLE_ACCOUNTS,
@@ -46,12 +47,10 @@ use {
         commitment_config::CommitmentConfig,
         epoch_schedule::EpochSchedule,
         exit::Exit,
-        feature_set::FeatureSet,
         fee_calculator::FeeRateGovernor,
         instruction::{AccountMeta, Instruction},
         message::Message,
         native_token::sol_to_lamports,
-        pubkey::Pubkey,
         rent::Rent,
         signature::{read_keypair_file, write_keypair_file, Keypair, Signer},
     },
@@ -788,7 +787,7 @@ impl TestValidator {
         let mint_lamports = sol_to_lamports(500_000_000.);
 
         // Only activate features which are not explicitly deactivated.
-        let mut feature_set = FeatureSet::default().inactive;
+        let mut feature_set = FeatureSet::default().inactive().clone();
         for feature in &config.deactivate_feature_set {
             if feature_set.remove(feature) {
                 info!("Feature for {:?} deactivated", feature)
@@ -873,8 +872,8 @@ impl TestValidator {
             genesis_config.ticks_per_slot = ticks_per_slot;
         }
 
-        for feature in feature_set {
-            genesis_utils::activate_feature(&mut genesis_config, feature);
+        for feature in feature_set.iter() {
+            genesis_utils::activate_feature(&mut genesis_config, *feature);
         }
 
         let ledger_path = match &config.ledger_path {
@@ -1224,7 +1223,7 @@ mod test {
 
     #[tokio::test]
     async fn test_deactivate_features() {
-        let mut control = FeatureSet::default().inactive;
+        let mut control = FeatureSet::default().inactive().clone();
         let mut deactivate_features = Vec::new();
         [
             solana_sdk::feature_set::deprecate_rewards_sysvar::id(),
@@ -1237,7 +1236,7 @@ mod test {
         });
 
         // Convert to `Vec` so we can get a slice.
-        let control: Vec<Pubkey> = control.into_iter().collect();
+        let control: Vec<Pubkey> = control.iter().cloned().collect();
 
         let (test_validator, _payer) = TestValidatorGenesis::default()
             .deactivate_features(&deactivate_features)

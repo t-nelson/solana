@@ -1,5 +1,5 @@
 use {
-    solana_feature_set::FeatureSet,
+    agave_feature_set::FeatureSet,
     solana_sdk::{
         instruction::InstructionError,
         precompiles::get_precompiles,

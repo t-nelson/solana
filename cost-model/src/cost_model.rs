@@ -14,7 +14,7 @@ use {
         DEFAULT_HEAP_COST, DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT, MAX_COMPUTE_UNIT_LIMIT,
     },
     solana_compute_budget_interface::ComputeBudgetInstruction,
-    solana_feature_set::{self as feature_set, FeatureSet},
+    agave_feature_set::{self as feature_set, FeatureSet},
     solana_fee_structure::FeeStructure,
     solana_pubkey::Pubkey,
     solana_runtime_transaction::{

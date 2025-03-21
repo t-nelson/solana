@@ -17,10 +17,10 @@ use {
             vm::Config,
         },
     },
+    agave_feature_set::FeatureSet,
     solana_sdk::{
         account::{AccountSharedData, ReadableAccount},
         clock::{Clock, Slot, UnixTimestamp},
-        feature_set::FeatureSet,
         message::AccountKeys,
         native_loader,
         pubkey::Pubkey,

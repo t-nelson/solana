@@ -123,7 +123,7 @@ mod tests {
         rand0_7::thread_rng,
         solana_account::{AccountSharedData, ReadableAccount},
         solana_ed25519_program::new_ed25519_instruction,
-        solana_feature_set::FeatureSet,
+        agave_feature_set::FeatureSet,
         solana_hash::Hash,
         solana_instruction::{error::InstructionError, AccountMeta, Instruction},
         solana_message::{AccountKeys, Message, SanitizedMessage},

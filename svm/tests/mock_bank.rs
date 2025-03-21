@@ -7,7 +7,7 @@ use {
         SyscallAbort, SyscallGetClockSysvar, SyscallGetRentSysvar, SyscallInvokeSignedRust,
         SyscallLog, SyscallMemcpy, SyscallMemset, SyscallSetReturnData,
     },
-    solana_feature_set::FeatureSet,
+    agave_feature_set::FeatureSet,
     solana_fee_structure::{FeeDetails, FeeStructure},
     solana_program_runtime::{
         execution_budget::{SVMTransactionExecutionBudget, SVMTransactionExecutionCost},

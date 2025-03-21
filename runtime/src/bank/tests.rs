@@ -39,7 +39,7 @@ use {
         compute_budget::ComputeBudget, compute_budget_limits::ComputeBudgetLimits,
     },
     solana_cost_model::block_cost_limits::{MAX_BLOCK_UNITS, MAX_BLOCK_UNITS_SIMD_0207},
-    solana_feature_set::{self as feature_set, FeatureSet},
+    agave_feature_set::{self as feature_set, FeatureSet},
     solana_inline_spl::token,
     solana_logger,
     solana_program_runtime::{
@@ -3935,8 +3935,8 @@ fn test_bank_update_sysvar_account() {
         let mut expected_next_slot = expected_previous_slot + 1;
 
         // First, initialize the clock sysvar
-        for feature_id in FeatureSet::default().inactive {
-            activate_feature(&mut genesis_config, feature_id);
+        for feature_id in FeatureSet::default().inactive() {
+            activate_feature(&mut genesis_config, *feature_id);
         }
         let bank1 = Arc::new(Bank::new_for_tests(&genesis_config));
         if pass == 0 {
@@ -6442,7 +6442,7 @@ fn test_bank_hash_consistency() {
     genesis_config.rent.burn_percent = 100;
     activate_feature(
         &mut genesis_config,
-        solana_feature_set::set_exempt_rent_epoch_max::id(),
+        agave_feature_set::set_exempt_rent_epoch_max::id(),
     );
 
     let mut bank = Arc::new(Bank::new_for_tests(&genesis_config));
@@ -7912,7 +7912,7 @@ fn test_compute_active_feature_set() {
         .parse::<Pubkey>()
         .unwrap();
     let mut feature_set = FeatureSet::default();
-    feature_set.inactive.insert(test_feature);
+    feature_set.inactive_mut().insert(test_feature);
     bank.feature_set = Arc::new(feature_set.clone());
 
     let (feature_set, new_activations) = bank.compute_active_feature_set(true);
@@ -11777,7 +11777,7 @@ fn test_partitioned_rent_collection(should_run_partitioned_rent_collection: bool
     if should_run_partitioned_rent_collection {
         genesis_config
             .accounts
-            .remove(&solana_feature_set::disable_partitioned_rent_collection::id());
+            .remove(&agave_feature_set::disable_partitioned_rent_collection::id());
     }
 
     let bank = Arc::new(Bank::new_for_tests(&genesis_config));
@@ -11819,10 +11819,10 @@ fn test_accounts_data_size_and_rent_collection(should_collect_rent: bool) {
     if should_collect_rent {
         genesis_config
             .accounts
-            .remove(&solana_feature_set::disable_rent_fees_collection::id());
+            .remove(&agave_feature_set::disable_rent_fees_collection::id());
         genesis_config
             .accounts
-            .remove(&solana_feature_set::disable_partitioned_rent_collection::id());
+            .remove(&agave_feature_set::disable_partitioned_rent_collection::id());
     }
 
     let bank = Arc::new(Bank::new_for_tests(&genesis_config));
@@ -12507,7 +12507,7 @@ where
     if should_run_partitioned_rent_collection {
         genesis_config
             .accounts
-            .remove(&solana_feature_set::disable_partitioned_rent_collection::id());
+            .remove(&agave_feature_set::disable_partitioned_rent_collection::id());
     }
     let (bank, bank_forks) = Bank::new_with_bank_forks_for_tests(&genesis_config);
     let bank_client = BankClient::new_shared(bank.clone());
@@ -13275,7 +13275,7 @@ fn test_deploy_last_epoch_slot() {
     let (mut genesis_config, mint_keypair) = create_genesis_config(1_000_000 * LAMPORTS_PER_SOL);
     activate_feature(
         &mut genesis_config,
-        solana_feature_set::enable_loader_v4::id(),
+        agave_feature_set::enable_loader_v4::id(),
     );
     genesis_config
         .accounts
@@ -13379,7 +13379,7 @@ fn test_loader_v3_to_v4_migration() {
     let (mut genesis_config, mint_keypair) = create_genesis_config(1_000_000 * LAMPORTS_PER_SOL);
     activate_feature(
         &mut genesis_config,
-        solana_feature_set::enable_loader_v4::id(),
+        agave_feature_set::enable_loader_v4::id(),
     );
     let mut bank = Bank::new_for_tests(&genesis_config);
     bank.activate_feature(&feature_set::remove_accounts_executable_flag_checks::id());
@@ -13963,7 +13963,7 @@ fn test_should_use_vote_keyed_leader_schedule() {
             let feature_activation_epoch = bank.epoch_schedule().get_epoch(feature_activation_slot);
             assert!(feature_activation_epoch <= bank_epoch);
             feature_set.activate(
-                &solana_feature_set::enable_vote_address_leader_schedule::id(),
+                &agave_feature_set::enable_vote_address_leader_schedule::id(),
                 feature_activation_slot,
             );
         }
