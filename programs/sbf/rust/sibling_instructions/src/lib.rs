@@ -2,12 +2,10 @@
 
 use {
     solana_account_info::AccountInfo,
+    solana_cpi::invoke,
     solana_instruction::{AccountMeta, Instruction, TRANSACTION_LEVEL_STACK_HEIGHT},
     solana_msg::msg,
-    solana_program::{
-        instruction::{get_processed_sibling_instruction, get_stack_height},
-        program::invoke,
-    },
+    solana_program::instruction::{get_processed_sibling_instruction, get_stack_height},
     solana_program_error::ProgramResult,
     solana_pubkey::Pubkey,
 };

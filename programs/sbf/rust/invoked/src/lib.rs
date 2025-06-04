@@ -4,11 +4,9 @@
 
 use {
     solana_account_info::{AccountInfo, MAX_PERMITTED_DATA_INCREASE},
+    solana_cpi::{get_return_data, invoke, invoke_signed, set_return_data},
     solana_msg::msg,
-    solana_program::{
-        log::sol_log_64,
-        program::{get_return_data, invoke, invoke_signed, set_return_data},
-    },
+    solana_program::log::sol_log_64,
     solana_program_error::{ProgramError, ProgramResult},
     solana_pubkey::Pubkey,
     solana_sbf_rust_invoked_dep::*,

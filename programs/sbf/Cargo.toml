@@ -44,6 +44,7 @@ solana-bpf-loader-program = { path = "../bpf_loader", version = "=2.3.0" }
 solana-cli-output = { path = "../../cli-output", version = "=2.3.0" }
 solana-compute-budget = { path = "../../compute-budget", version = "=2.3.0" }
 solana-compute-budget-instruction = { path = "../../compute-budget-instruction", version = "=2.3.0" }
+solana-cpi = "=2.2.1"
 solana-curve25519 = { path = "../../curves/curve25519", version = "=2.3.0" }
 solana-decode-error = "=2.2.1"
 solana-define-syscall = "=2.3.0"

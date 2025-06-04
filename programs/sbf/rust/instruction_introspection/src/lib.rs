@@ -2,10 +2,10 @@
 
 use {
     solana_account_info::AccountInfo,
+    solana_cpi::invoke,
     solana_instruction::{AccountMeta, Instruction},
     solana_instructions_sysvar as instructions,
     solana_msg::msg,
-    solana_program::program::invoke,
     solana_program_error::{ProgramError, ProgramResult},
     solana_pubkey::Pubkey,
 };

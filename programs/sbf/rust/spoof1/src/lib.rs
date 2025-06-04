@@ -1,8 +1,8 @@
 use {
     solana_account_info::AccountInfo,
+    solana_cpi::invoke,
     solana_instruction::{AccountMeta, Instruction},
     solana_msg::msg,
-    solana_program::program::invoke,
     solana_program_error::ProgramResult,
     solana_pubkey::Pubkey,
     solana_system_interface::{instruction::SystemInstruction, program as system_program},

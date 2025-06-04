@@ -3,11 +3,9 @@
 
 use {
     solana_account_info::AccountInfo,
+    solana_cpi::set_return_data,
     solana_msg::msg,
-    solana_program::{
-        epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
-        program::set_return_data,
-    },
+    solana_program::epoch_stake::{get_epoch_stake_for_vote_account, get_epoch_total_stake},
     solana_program_error::ProgramResult,
     solana_pubkey::Pubkey,
 };

@@ -10,6 +10,7 @@ edition = { workspace = true }
 
 [dependencies]
 solana-account-info = { workspace = true }
+solana-cpi = { workspace = true }
 solana-msg = { workspace = true }
 solana-program = { workspace = true }
 solana-program-entrypoint = { workspace = true }

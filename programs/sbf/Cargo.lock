@@ -8022,7 +8022,7 @@ version = "2.3.0"
 dependencies = [
  "borsh 1.5.7",
  "solana-account-info",
- "solana-program",
+ "solana-cpi",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8043,9 +8043,9 @@ name = "solana-sbf-rust-caller-access"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
  "solana-msg",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8084,6 +8084,7 @@ name = "solana-sbf-rust-deprecated-loader"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
  "solana-msg",
  "solana-program",
@@ -8110,9 +8111,9 @@ name = "solana-sbf-rust-dup-accounts"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
  "solana-msg",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8160,6 +8161,7 @@ name = "solana-sbf-rust-inner_instruction_alignment_check"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
  "solana-msg",
  "solana-program",
@@ -8173,10 +8175,10 @@ name = "solana-sbf-rust-instruction-introspection"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
  "solana-instructions-sysvar",
  "solana-msg",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8188,6 +8190,7 @@ name = "solana-sbf-rust-invoke"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
  "solana-msg",
  "solana-program",
@@ -8207,8 +8210,8 @@ name = "solana-sbf-rust-invoke-and-error"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8219,8 +8222,8 @@ name = "solana-sbf-rust-invoke-and-ok"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8231,8 +8234,8 @@ name = "solana-sbf-rust-invoke-and-return"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8247,6 +8250,7 @@ name = "solana-sbf-rust-invoked"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-msg",
  "solana-program",
  "solana-program-entrypoint",
@@ -8279,6 +8283,7 @@ name = "solana-sbf-rust-log-data"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
@@ -8390,8 +8395,8 @@ name = "solana-sbf-rust-realloc"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-msg",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8412,9 +8417,9 @@ name = "solana-sbf-rust-realloc-invoke"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
  "solana-msg",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8444,9 +8449,9 @@ name = "solana-sbf-rust-ro-account_modify"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
  "solana-msg",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8457,6 +8462,7 @@ name = "solana-sbf-rust-ro-modify"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-msg",
  "solana-program",
  "solana-program-entrypoint",
@@ -8518,6 +8524,7 @@ name = "solana-sbf-rust-sibling-instructions"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
  "solana-msg",
  "solana-program",
@@ -8544,9 +8551,9 @@ name = "solana-sbf-rust-spoof1"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-instruction",
  "solana-msg",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",

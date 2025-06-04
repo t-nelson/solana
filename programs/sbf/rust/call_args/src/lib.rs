@@ -1,7 +1,7 @@
 use {
     borsh::{from_slice, to_vec, BorshDeserialize, BorshSerialize},
     solana_account_info::AccountInfo,
-    solana_program::program::set_return_data,
+    solana_cpi::set_return_data,
     solana_program_error::ProgramResult,
     solana_pubkey::Pubkey,
 };

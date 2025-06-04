@@ -5,9 +5,10 @@
 
 use {
     solana_account_info::AccountInfo,
+    solana_cpi::invoke,
     solana_instruction::{AccountMeta, Instruction},
     solana_msg::msg,
-    solana_program::{log::sol_log_params, program::invoke},
+    solana_program::log::sol_log_params,
     solana_program_error::ProgramResult,
     solana_pubkey::Pubkey,
     solana_sbf_rust_invoke_dep::*,

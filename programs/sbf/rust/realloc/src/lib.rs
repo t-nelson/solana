@@ -4,8 +4,8 @@
 
 use {
     solana_account_info::{AccountInfo, MAX_PERMITTED_DATA_INCREASE},
+    solana_cpi::invoke,
     solana_msg::msg,
-    solana_program::program::invoke,
     solana_program_error::ProgramResult,
     solana_pubkey::Pubkey,
     solana_sbf_rust_realloc_dep::*,

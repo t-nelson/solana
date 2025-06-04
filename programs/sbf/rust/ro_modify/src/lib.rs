@@ -2,8 +2,9 @@
 
 use {
     solana_account_info::AccountInfo,
+    solana_cpi::invoke,
     solana_msg::msg,
-    solana_program::{program::invoke, syscalls::sol_invoke_signed_c},
+    solana_program::syscalls::sol_invoke_signed_c,
     solana_program_error::{ProgramError, ProgramResult},
     solana_pubkey::Pubkey,
     solana_system_interface::instruction as system_instruction,

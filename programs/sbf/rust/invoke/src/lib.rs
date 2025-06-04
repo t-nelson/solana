@@ -7,13 +7,11 @@
 use solana_program_memory::sol_memcmp;
 use {
     solana_account_info::AccountInfo,
+    solana_cpi::{get_return_data, invoke, invoke_signed, set_return_data},
     solana_instruction::Instruction,
     solana_msg::msg,
-    solana_program::{
-        program::{get_return_data, invoke, invoke_signed, set_return_data},
-        syscalls::{
-            MAX_CPI_ACCOUNT_INFOS, MAX_CPI_INSTRUCTION_ACCOUNTS, MAX_CPI_INSTRUCTION_DATA_LEN,
-        },
+    solana_program::syscalls::{
+        MAX_CPI_ACCOUNT_INFOS, MAX_CPI_INSTRUCTION_ACCOUNTS, MAX_CPI_INSTRUCTION_DATA_LEN,
     },
     solana_program_entrypoint::{ProgramResult, MAX_PERMITTED_DATA_INCREASE},
     solana_program_error::ProgramError,
