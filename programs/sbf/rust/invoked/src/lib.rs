@@ -6,7 +6,6 @@ use {
     solana_account_info::{AccountInfo, MAX_PERMITTED_DATA_INCREASE},
     solana_cpi::{get_return_data, invoke, invoke_signed, set_return_data},
     solana_msg::msg,
-    solana_program::log::sol_log_64,
     solana_program_error::{ProgramError, ProgramResult},
     solana_pubkey::Pubkey,
     solana_sbf_rust_invoked_dep::*,
@@ -105,7 +104,14 @@ fn process_instruction(
                 assert!(accounts[INVOKED_PROGRAM_DUP_INDEX]
                     .try_borrow_mut_data()
                     .is_err());
-                sol_log_64(data[0] as u64, 0, 0, 0, 0);
+                msg!(
+                    "{:#x}, {:#x}, {:#x}, {:#x}, {:#x}",
+                    data[0] as u64,
+                    0,
+                    0,
+                    0,
+                    0
+                );
             }
         }
         RETURN_OK => {

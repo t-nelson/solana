@@ -19,6 +19,7 @@ check-cfg = [
 agave-feature-set = { path = "../../feature-set", version = "=2.3.0" }
 agave-reserved-account-keys = { path = "../../reserved-account-keys", version = "=2.3.0" }
 array-bytes = "=1.4.1"
+assert_matches = "1.5.0"
 bincode = { version = "1.1.4", default-features = false }
 blake3 = "1.0.0"
 borsh = "1.5.1"
@@ -129,6 +130,7 @@ frozen-abi = []
 agave-feature-set = { workspace = true }
 agave-reserved-account-keys = { workspace = true }
 agave-validator = { workspace = true }
+assert_matches = { workspace = true }
 bincode = { workspace = true }
 borsh = { workspace = true }
 byteorder = { workspace = true }

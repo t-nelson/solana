@@ -7876,6 +7876,7 @@ dependencies = [
  "agave-feature-set",
  "agave-reserved-account-keys",
  "agave-validator",
+ "assert_matches",
  "bincode",
  "borsh 1.5.7",
  "byteorder 1.5.0",
@@ -7978,7 +7979,6 @@ name = "solana-sbf-rust-alloc"
 version = "2.3.0"
 dependencies = [
  "solana-msg",
- "solana-program",
  "solana-program-entrypoint",
  "solana-sysvar",
 ]
@@ -8252,7 +8252,6 @@ dependencies = [
  "solana-account-info",
  "solana-cpi",
  "solana-msg",
- "solana-program",
  "solana-program-entrypoint",
  "solana-program-error",
  "solana-pubkey",
@@ -8274,7 +8273,7 @@ dependencies = [
 name = "solana-sbf-rust-iter"
 version = "2.3.0"
 dependencies = [
- "solana-program",
+ "solana-msg",
  "solana-program-entrypoint",
 ]
 
@@ -8296,7 +8295,6 @@ name = "solana-sbf-rust-many-args"
 version = "2.3.0"
 dependencies = [
  "solana-msg",
- "solana-program",
  "solana-program-entrypoint",
  "solana-sbf-rust-many-args-dep",
 ]
@@ -8306,7 +8304,6 @@ name = "solana-sbf-rust-many-args-dep"
 version = "2.3.0"
 dependencies = [
  "solana-msg",
- "solana-program",
 ]
 
 [[package]]
@@ -8358,7 +8355,7 @@ dependencies = [
 name = "solana-sbf-rust-param-passing"
 version = "2.3.0"
 dependencies = [
- "solana-program",
+ "solana-msg",
  "solana-program-entrypoint",
  "solana-sbf-rust-param-passing-dep",
 ]
@@ -8616,6 +8613,7 @@ name = "solana-sbf-syscall-get-epoch-stake"
 version = "2.3.0"
 dependencies = [
  "solana-account-info",
+ "solana-cpi",
  "solana-msg",
  "solana-program",
  "solana-program-entrypoint",

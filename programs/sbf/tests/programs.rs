@@ -11,6 +11,7 @@
 use {
     agave_feature_set::{self as feature_set, FeatureSet},
     agave_reserved_account_keys::ReservedAccountKeys,
+    assert_matches::assert_matches,
     borsh::{from_slice, to_vec, BorshDeserialize, BorshSerialize},
     solana_account::{AccountSharedData, ReadableAccount, WritableAccount},
     solana_account_info::MAX_PERMITTED_DATA_INCREASE,
@@ -1229,7 +1230,7 @@ fn test_program_sbf_call_depth() {
         vec![],
     );
     let result = bank_client.send_and_confirm_instruction(&mint_keypair, instruction);
-    assert!(result.is_ok());
+    assert_matches!(result, Ok(_));
 
     let instruction =
         Instruction::new_with_bincode(program_id, &ComputeBudget::default().max_call_depth, vec![]);
@@ -1300,15 +1301,15 @@ fn assert_instruction_count() {
     {
         programs.extend_from_slice(&[
             ("solana_sbf_rust_128bit", 969),
-            ("solana_sbf_rust_alloc", 5077),
+            ("solana_sbf_rust_alloc", 11166),
             ("solana_sbf_rust_custom_heap", 304),
             ("solana_sbf_rust_dep_crate", 2),
-            ("solana_sbf_rust_iter", 1514),
-            ("solana_sbf_rust_many_args", 1290),
+            ("solana_sbf_rust_iter", 3626),
+            ("solana_sbf_rust_many_args", 13678),
             ("solana_sbf_rust_mem", 1302),
             ("solana_sbf_rust_membuiltins", 331),
             ("solana_sbf_rust_noop", 314),
-            ("solana_sbf_rust_param_passing", 108),
+            ("solana_sbf_rust_param_passing", 2197),
             ("solana_sbf_rust_rand", 278),
             ("solana_sbf_rust_sanity", 51325),
             ("solana_sbf_rust_secp256k1_recover", 89388),
@@ -1317,55 +1318,59 @@ fn assert_instruction_count() {
     }
 
     println!("\n  {:36} expected actual  diff", "SBF program");
-    for (program_name, expected_consumption) in programs.iter() {
-        let loader_id = bpf_loader::id();
-        let program_key = Pubkey::new_unique();
-        let mut transaction_accounts = vec![
-            (program_key, AccountSharedData::new(0, 0, &loader_id)),
-            (
-                Pubkey::new_unique(),
-                AccountSharedData::new(0, 0, &program_key),
-            ),
-        ];
-        let instruction_accounts = vec![AccountMeta {
-            pubkey: transaction_accounts[1].0,
-            is_signer: false,
-            is_writable: false,
-        }];
-        transaction_accounts[0]
-            .1
-            .set_data_from_slice(&load_program_from_file(program_name));
-        transaction_accounts[0].1.set_executable(true);
+    let overconsumed = programs.iter()
+        .map(|(program_name, expected_consumption)| {
+            let loader_id = bpf_loader::id();
+            let program_key = Pubkey::new_unique();
+            let mut transaction_accounts = vec![
+                (program_key, AccountSharedData::new(0, 0, &loader_id)),
+                (
+                    Pubkey::new_unique(),
+                    AccountSharedData::new(0, 0, &program_key),
+                ),
+            ];
+            let instruction_accounts = vec![AccountMeta {
+                pubkey: transaction_accounts[1].0,
+                is_signer: false,
+                is_writable: false,
+            }];
+            transaction_accounts[0]
+                .1
+                .set_data_from_slice(&load_program_from_file(program_name));
+            transaction_accounts[0].1.set_executable(true);
 
-        let prev_compute_meter = RefCell::new(0);
-        print!("  {:36} {:8}", program_name, *expected_consumption);
-        mock_process_instruction(
-            &loader_id,
-            vec![0],
-            &[],
-            transaction_accounts,
-            instruction_accounts,
-            Ok(()),
-            solana_bpf_loader_program::Entrypoint::vm,
-            |invoke_context| {
-                *prev_compute_meter.borrow_mut() = invoke_context.get_remaining();
-                solana_bpf_loader_program::test_utils::load_all_invoked_programs(invoke_context);
-            },
-            |invoke_context| {
-                let consumption = prev_compute_meter
-                    .borrow()
-                    .saturating_sub(invoke_context.get_remaining());
-                let diff: i64 = consumption as i64 - *expected_consumption as i64;
-                println!(
-                    "{:6} {:+5} ({:+3.0}%)",
-                    consumption,
-                    diff,
-                    100.0_f64 * consumption as f64 / *expected_consumption as f64 - 100.0_f64,
-                );
-                assert!(consumption <= *expected_consumption);
-            },
-        );
-    }
+            let prev_compute_meter = RefCell::new(0);
+            print!("  {:36} {:8}", program_name, *expected_consumption);
+            let mut consumption = 0;
+            mock_process_instruction(
+                &loader_id,
+                vec![0],
+                &[],
+                transaction_accounts,
+                instruction_accounts,
+                Ok(()),
+                solana_bpf_loader_program::Entrypoint::vm,
+                |invoke_context| {
+                    *prev_compute_meter.borrow_mut() = invoke_context.get_remaining();
+                    solana_bpf_loader_program::test_utils::load_all_invoked_programs(invoke_context);
+                },
+                |invoke_context| {
+                    consumption = prev_compute_meter
+                        .borrow()
+                        .saturating_sub(invoke_context.get_remaining());
+                    let diff: i64 = consumption as i64 - *expected_consumption as i64;
+                    println!(
+                        "{:6} {:+5} ({:+3.0}%)",
+                        consumption,
+                        diff,
+                        100.0_f64 * consumption as f64 / *expected_consumption as f64 - 100.0_f64,
+                    );
+                },
+            );
+            consumption > *expected_consumption
+        })
+        .collect::<Vec<_>>();
+    assert!(!overconsumed.into_iter().any(|o| o));
 }
 
 #[test]

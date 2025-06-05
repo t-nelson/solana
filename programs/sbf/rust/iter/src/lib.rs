@@ -3,7 +3,7 @@
 #![allow(clippy::arithmetic_side_effects)]
 
 use {
-    solana_program::log::sol_log_64,
+    solana_msg::msg,
     solana_program_entrypoint::{custom_heap_default, custom_panic_default, SUCCESS},
 };
 
@@ -16,7 +16,7 @@ pub extern "C" fn entrypoint(_input: *mut u8) -> u64 {
     for v in ones.iter() {
         sum += *v;
     }
-    sol_log_64(0xff, 0, 0, 0, sum);
+    msg!("{:#x}, {:#x}, {:#x}, {:#x}, {:#x}", 0xff, 0, 0, 0, sum);
     assert_eq!(sum, ITERS as u64);
 
     SUCCESS

@@ -10,4 +10,3 @@ edition = { workspace = true }
 
 [dependencies]
 solana-msg = { workspace = true }
-solana-program = { workspace = true }

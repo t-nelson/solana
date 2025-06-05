@@ -2,7 +2,7 @@
 
 #![allow(clippy::arithmetic_side_effects)]
 
-use solana_program::log::{sol_log, sol_log_64};
+use solana_msg::msg;
 
 pub fn many_args(
     arg1: u64,
@@ -15,8 +15,22 @@ pub fn many_args(
     arg8: u64,
     arg9: u64,
 ) -> u64 {
-    sol_log("same package");
-    sol_log_64(arg1, arg2, arg3, arg4, arg5);
-    sol_log_64(arg6, arg7, arg8, arg9, 0);
+    msg!("same package");
+    msg!(
+        "{:#x}, {:#x}, {:#x}, {:#x}, {:#x}",
+        arg1,
+        arg2,
+        arg3,
+        arg4,
+        arg5
+    );
+    msg!(
+        "{:#x}, {:#x}, {:#x}, {:#x}, {:#x}",
+        arg6,
+        arg7,
+        arg8,
+        arg9,
+        0
+    );
     arg1 + arg2 + arg3 + arg4 + arg5 + arg6 + arg7 + arg8 + arg9
 }
