@@ -2,7 +2,6 @@
 
 use {
     solana_msg::msg,
-    solana_program::log::sol_log_64,
     solana_program_entrypoint::{custom_heap_default, custom_panic_default, SUCCESS},
 };
 
@@ -12,7 +11,14 @@ pub fn recurse(data: &mut [u8]) {
         return;
     }
     recurse(&mut data[1..]);
-    sol_log_64(line!() as u64, 0, 0, 0, data[0] as u64);
+    msg!(
+        "{:#x}, {:#x}, {:#x}, {:#x}, {:#x}",
+        line!() as u64,
+        0,
+        0,
+        0,
+        data[0] as u64
+    );
 }
 
 /// # Safety
@@ -21,7 +27,14 @@ pub fn recurse(data: &mut [u8]) {
 pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
     msg!("Call depth");
     let depth = *input.add(16);
-    sol_log_64(line!() as u64, 0, 0, 0, depth as u64);
+    msg!(
+        "{:#x}, {:#x}, {:#x}, {:#x}, {:#x}",
+        line!() as u64,
+        0,
+        0,
+        0,
+        depth as u64
+    );
     let mut data = Vec::with_capacity(depth as usize);
     for i in 0_u8..depth {
         data.push(i);
