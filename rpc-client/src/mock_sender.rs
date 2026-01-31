@@ -367,7 +367,7 @@ impl RpcSender for MockSender {
             })?,
             "getMinimumBalanceForRentExemption" => json![20],
             "getVersion" => {
-                let version = Version::default();
+                let version = Version::this_build();
                 json!(RpcVersionInfo {
                     solana_core: version.to_string(),
                     feature_set: Some(version.feature_set()),
