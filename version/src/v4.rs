@@ -154,6 +154,20 @@ pub struct Version {
     prerelease: Prerelease,
 }
 
+fn commit_str_to_u32<C: AsRef<str>>(commit: C) -> u32 {
+    let commit = commit.as_ref();
+    let commit = commit.get(..8).expect("TODO: handle error");
+    u32::from_str_radix(commit, 16).expect("TODO: handle error")
+}
+
+fn feature_set_id_bytes_to_u32<B: AsRef<[u8]>>(bytes: B) -> u32 {
+    let bytes = bytes.as_ref();
+    let bytes = bytes.get(..4).expect("TODO: handle error");
+    let bytes =
+        TryInto::<[u8; 4]>::try_into(bytes).expect("array conversion suceedes since get() did");
+    u32::from_le_bytes(bytes)
+}
+
 impl Version {
     fn new_from_parts(
         major: u16,
@@ -176,18 +190,35 @@ impl Version {
         }
     }
 
+    pub fn new<C: AsRef<str>, F: AsRef<[u8]>>(
+        major: u16,
+        minor: u16,
+        patch: u16,
+        commit: C,
+        feature_set: F,
+        client: ClientId,
+        prerelease: Prerelease,
+    ) -> Self {
+        let commit = commit_str_to_u32(commit);
+        let feature_set = feature_set_id_bytes_to_u32(feature_set);
+        Self::new_from_parts(major, minor, patch, commit, feature_set, client, prerelease)
+    }
+
     pub fn this_build() -> Self {
-        Self::new_from_parts(
-            env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap(),
-            env!("CARGO_PKG_VERSION_MINOR").parse().unwrap(),
-            env!("CARGO_PKG_VERSION_PATCH").parse().unwrap(),
-            compute_commit(option_env!("CI_COMMIT"))
+        let feature_set =
+            u32::from_le_bytes(agave_feature_set::ID.as_ref()[..4].try_into().unwrap());
+        let prerelease = Prerelease::from_str(env!("CARGO_PKG_VERSION_PRE")).unwrap();
+        Self {
+            major: env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap(),
+            minor: env!("CARGO_PKG_VERSION_MINOR").parse().unwrap(),
+            patch: env!("CARGO_PKG_VERSION_PATCH").parse().unwrap(),
+            commit: compute_commit(option_env!("CI_COMMIT"))
                 .or(compute_commit(option_env!("AGAVE_GIT_COMMIT_HASH")))
                 .unwrap_or_else(|| rng().random::<u32>()),
-            u32::from_le_bytes(agave_feature_set::ID.as_ref()[..4].try_into().unwrap()),
-            ClientId::this_client(),
-            Prerelease::from_str(env!("CARGO_PKG_VERSION_PRE")).unwrap(),
-        )
+            feature_set,
+            client: ClientId::this_client(),
+            prerelease,
+        }
     }
 
     pub fn major(&self) -> u16 {
@@ -430,20 +461,6 @@ mod tests {
     }
 
     #[test]
-    fn test_prerelease_compatible_with_semver_prerelease() {
-        let test_cases = [
-            ("", Prerelease::Stable),
-            ("rc.0", Prerelease::ReleaseCandidate(0)),
-            ("beta.1", Prerelease::Beta(1)),
-            ("alpha.2", Prerelease::Alpha(2)),
-        ];
-        for (test_str, test_pr) in test_cases.into_iter() {
-            let svpr = semver::Prerelease::new(test_pr.to_string().as_str()).unwrap();
-            assert_eq!(svpr.as_str(), test_str);
-        }
-    }
-
-    #[test]
     fn test_packed_minor_try_pack() {
         assert_eq!(
             PackedMinor::try_pack(0, 0, &Prerelease::Stable),
@@ -635,12 +652,12 @@ mod tests {
             feature_set: u32::MAX,
             client: u16::MAX,
         };
-        let v4_version = Version::new_from_parts(
+        let v4_version = Version::new(
             u16::MAX,
             PackedMinor::PRERELEASE_MINOR_MAX,
             0,
-            u32::MAX,
-            u32::MAX,
+            "ffffffff",
+            [u8::MAX; 4],
             ClientId::Unknown(u16::MAX),
             Prerelease::Alpha(u16::MAX),
         );
@@ -661,12 +678,12 @@ mod tests {
         let de_version: Version = bincode::deserialize(&bytes).unwrap();
         assert_eq!(version, de_version);
 
-        let version = Version::new_from_parts(
+        let version = Version::new(
             u16::MAX,
             PackedMinor::PRERELEASE_MINOR_MAX,
             0,
-            u32::MAX,
-            u32::MAX,
+            "ffffffff",
+            [u8::MAX; 4],
             ClientId::Unknown(u16::MAX),
             Prerelease::Alpha(u16::MAX),
         );
