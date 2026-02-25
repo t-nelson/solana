@@ -11,7 +11,8 @@ SYMBOL_NAME="$2"
 
 # 1. Get Symbol VA, Size, and Section Index (Ndx)
 # Output fields: [1]Value [2]Size [6]Ndx
-SYMBOL_DETAILS=$(readelf -Ws "$ELF_FILE" | grep -w "$SYMBOL_NAME" | head -n 1)
+SYMBOL_DETAILS=$(readelf -CWs "$ELF_FILE" | grep -w "$SYMBOL_NAME" | head -n 1)
+
 
 if [ -z "$SYMBOL_DETAILS" ]; then
     echo "Error: Symbol '$SYMBOL_NAME' not found in '$ELF_FILE'." >&2

@@ -6,7 +6,7 @@ description = { workspace = true }
 repository = { workspace = true }
 homepage = { workspace = true }
 license = { workspace = true }
-edition = { workspace = true }
+edition = "2021"
 include = ["Cargo.toml", "src/**", "README", "agave-xdp-prog"]
 
 [[bin]]

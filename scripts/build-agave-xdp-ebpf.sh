@@ -10,6 +10,7 @@ echo "Hash before rebuild: $BEFORE_HASH"
 
 # shellcheck disable=SC1091
 source "$REPO_ROOT/ci/rust-version.sh"
+rust_nightly=nightly-2025-02-16
 
 echo "Using nightly toolchain: $rust_nightly"
 
