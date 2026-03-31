@@ -1358,13 +1358,12 @@ fn test_clean_old_with_both_normal_and_zero_lamport_accounts() {
     let index_key = IndexKey::SplTokenMint(mint_key);
     let bank_id = 0;
     accounts
-        .accounts_index
         .index_scan_accounts(
             &Ancestors::default(),
             bank_id,
             index_key,
-            |key, _| {
-                found_accounts.insert(*key);
+            |account| {
+                found_accounts.insert(*account.unwrap().0);
             },
             &ScanConfig::default(),
         )
@@ -1436,12 +1435,13 @@ fn test_clean_old_with_both_normal_and_zero_lamport_accounts() {
     // Secondary index should have purged `pubkey1` as well
     let mut found_accounts = vec![];
     accounts
-        .accounts_index
         .index_scan_accounts(
             &Ancestors::default(),
             bank_id,
             IndexKey::SplTokenMint(mint_key),
-            |key, _| found_accounts.push(*key),
+            |account| {
+                found_accounts.push(*account.unwrap().0);
+            },
             &ScanConfig::default(),
         )
         .unwrap();
