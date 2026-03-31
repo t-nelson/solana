@@ -2056,11 +2056,10 @@ mod tests {
         let bls_pubkey: BLSPubkey = bls_keypair.public.into();
 
         let signed_message = bincode::serialize(&vote).unwrap();
-
         vote_message
             .signature
             .verify(&bls_pubkey, &signed_message)
-            .unwrap();
+            .expect("vote message signature should verify");
     }
 
     #[test]
