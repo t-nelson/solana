@@ -8888,6 +8888,7 @@ dependencies = [
  "solana-entry",
  "solana-epoch-schedule",
  "solana-feature-gate-interface",
+ "solana-fee-structure",
  "solana-genesis-config",
  "solana-genesis-utils",
  "solana-gossip",
