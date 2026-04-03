@@ -94,6 +94,7 @@ pub fn execute(
     matches: &ArgMatches,
     solana_version: &str,
     operation: Operation,
+    config: super::Config,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Debugging panics is easier with a backtrace
     if env::var_os("RUST_BACKTRACE").is_none() {
@@ -262,6 +263,9 @@ pub fn execute(
 
     let exit = Arc::new(AtomicBool::new(false));
 
+    #[cfg(not(target_os = "linux"))]
+    let _ = config;
+
     #[cfg(target_os = "linux")]
     let xdp_builder_with_src_addr = {
         use {
@@ -272,15 +276,22 @@ pub fn execute(
             },
         };
 
+        let super::Config { primordial_caps } = config;
+
         let mut required_caps = HashSet::new();
         let mut retained_caps = HashSet::new();
-        let supported_caps = HashSet::from_iter([
+        let mut supported_caps = HashSet::from_iter([
             CAP_BPF,
             CAP_NET_ADMIN,
             CAP_NET_RAW,
             CAP_PERFMON,
             CAP_SYS_NICE,
         ]);
+
+        // make sure we keep any primordial caps
+        supported_caps.extend(primordial_caps.clone());
+        required_caps.extend(primordial_caps.clone());
+        retained_caps.extend(primordial_caps.clone());
 
         if let Some(xdp_config) = retransmit_xdp.as_ref() {
             required_caps.insert(CAP_NET_ADMIN);
