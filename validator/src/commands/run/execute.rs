@@ -328,9 +328,12 @@ pub fn execute(
                  consider removing them from your operational configuration.",
             );
         }
+
         // drop all caps that the current configuration does not require
+        caps::set(None, CapSet::Effective, &required_caps)
+            .expect("linux allows effective capset to be set");
         caps::set(None, CapSet::Permitted, &required_caps)
-            .expect("permitted capset to be writable");
+            .expect("linux allows permitted capset to be set");
 
         // XDP _MUST_ be setup _BEFORE_ the app spawns any threads to ensure linux
         // capabilities do not leak, leaving the process in a state where it could
@@ -368,6 +371,8 @@ pub fn execute(
         });
 
         // we're done with caps needed to init xdp now. remove them from our process
+        caps::set(None, CapSet::Effective, &retained_caps)
+            .expect("linux allows effective capset to be set");
         caps::set(None, CapSet::Permitted, &retained_caps)
             .expect("linux allows permitted capset to be set");
 

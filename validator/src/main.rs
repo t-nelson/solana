@@ -38,6 +38,8 @@ pub fn main() {
         caps::clear(None, CapSet::Effective).expect("linux allows effective capset to be cleared");
 
         if !(subcommand.is_empty() || subcommand == "run") {
+            caps::clear(None, CapSet::Effective)
+                .expect("linux allows effective capset to be cleared");
             // we only need caps to run the actual valididator. clear them here
             // for all other subcommands
             caps::clear(None, CapSet::Permitted)
