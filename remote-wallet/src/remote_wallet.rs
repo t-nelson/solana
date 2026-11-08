@@ -25,7 +25,7 @@ use {
     trezor_client::{self, error::Error as TrezorClientError},
 };
 
-const HID_GLOBAL_USAGE_PAGE: u16 = 0xFF00;
+const LEDGER_HID_USAGE_PAGE: u16 = 0xFFA0;
 const HID_USB_DEVICE_CLASS: u8 = 0;
 
 /// Remote wallet error.
@@ -488,7 +488,7 @@ impl RemoteWalletInfo {
 
 /// Helper to determine if a device is a valid HID
 pub fn is_valid_hid_device(usage_page: u16, interface_number: i32) -> bool {
-    usage_page == HID_GLOBAL_USAGE_PAGE || interface_number == HID_USB_DEVICE_CLASS as i32
+    usage_page == LEDGER_HID_USAGE_PAGE || interface_number == HID_USB_DEVICE_CLASS as i32
 }
 
 /// Helper to initialize hidapi and RemoteWalletManager
