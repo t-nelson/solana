@@ -284,6 +284,7 @@ gethostname = "1.1.0"
 goauth = "0.17.0"
 hashbrown = { version = "0.17.1", default-features = false }
 hex = "0.4.3"
+hid-report = "1.0.0"
 hidapi = { version = "2.6.7", default-features = false }
 histogram = "0.6.9"
 http = "1.5.0"

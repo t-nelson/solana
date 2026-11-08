@@ -150,6 +150,36 @@ impl RemoteWalletManager {
         Ok(num_curr_devices - num_prev_devices)
     }
 
+    #[cfg(all(
+        feature = "hidapi",
+        not(any(feature = "linux-static-libusb", feature = "linux-shared-libusb"))
+    ))]
+    fn usage_page(_hidapi: &hidapi::HidApi, device_info: &hidapi::DeviceInfo) -> Option<u16> {
+        Some(device_info.usage_page())
+    }
+
+    #[cfg(all(
+        feature = "hidapi",
+        any(feature = "linux-static-libusb", feature = "linux-shared-libusb")
+    ))]
+    fn usage_page(hidapi: &hidapi::HidApi, device_info: &hidapi::DeviceInfo) -> Option<u16> {
+        // the libusb backend does not automatically provide the usage page. query it directly
+        let device = device_info.open_device(hidapi).ok()?;
+        let mut descriptor_buf = [0u8; 4096];
+        let bytes_read = device.get_report_descriptor(&mut descriptor_buf).ok()?;
+        if bytes_read == 0 {
+            return None;
+        }
+        let items = hid_report::parse((&descriptor_buf[..bytes_read]).into_iter().copied());
+        for item in items {
+            if let hid_report::ReportItem::UsagePage(usage_page) = item {
+                let bytes: [u8; 2] = usage_page.data().try_into().ok()?;
+                return Some(u16::from_le_bytes(bytes));
+            }
+        }
+        None
+    }
+
     #[cfg(feature = "hidapi")]
     fn scan_ledger_devices(
         usb: &hidapi::HidApi,
@@ -157,11 +187,11 @@ impl RemoteWalletManager {
         errors: &mut Vec<RemoteWalletError>,
     ) {
         for device_info in usb.device_list().filter(|&device_info| {
-            #[cfg(not(any(feature = "linux-static-libusb", feature = "linux-shared-libusb")))]
+            let Some(usage_page) = Self::usage_page(usb, device_info) else {
+                return false;
+            };
             let is_valid_hid_device =
-                is_valid_hid_device(device_info.usage_page(), device_info.interface_number());
-            #[cfg(any(feature = "linux-static-libusb", feature = "linux-shared-libusb"))]
-            let is_valid_hid_device = true; // libusb backend does not provide DeviceInfo::usage_page()
+                is_valid_hid_device(usage_page, device_info.interface_number());
             is_valid_hid_device
                 && is_valid_ledger(device_info.vendor_id(), device_info.product_id())
         }) {

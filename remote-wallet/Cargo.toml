@@ -29,14 +29,15 @@ keystone = [
     "dep:ur-registry",
 ]
 linux-shared-hidraw = ["hidapi/linux-shared-hidraw"]
-linux-shared-libusb = ["hidapi/linux-shared-libusb"]
+linux-shared-libusb = ["hidapi/linux-shared-libusb", "dep:hid-report"]
 linux-static-hidraw = ["hidapi/linux-static-hidraw"]
-linux-static-libusb = ["hidapi/linux-static-libusb"]
+linux-static-libusb = ["hidapi/linux-static-libusb", "dep:hid-report"]
 
 [dependencies]
 console = { workspace = true }
 dialoguer = { workspace = true }
 hex = { workspace = true, optional = true }
+hid-report = { workspace = true, optional = true }
 hidapi = { workspace = true, optional = true }
 log = { workspace = true }
 num-derive = { workspace = true }

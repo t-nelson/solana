@@ -3437,6 +3437,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hid-report"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0bebb5da0629d65c77fa369d9e9e3ee5dee280506452d53ef97d9d2848d14945"
+
+[[package]]
 name = "hidapi"
 version = "2.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9858,6 +9864,7 @@ dependencies = [
  "console 0.16.6",
  "dialoguer",
  "hex",
+ "hid-report",
  "hidapi",
  "log",
  "num-derive 0.5.1",
