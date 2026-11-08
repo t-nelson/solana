@@ -26,7 +26,6 @@ use {
 };
 
 const LEDGER_HID_USAGE_PAGE: u16 = 0xFFA0;
-const HID_USB_DEVICE_CLASS: u8 = 0;
 
 /// Remote wallet error.
 #[derive(Error, Debug, Clone)]
@@ -187,13 +186,8 @@ impl RemoteWalletManager {
         errors: &mut Vec<RemoteWalletError>,
     ) {
         for device_info in usb.device_list().filter(|&device_info| {
-            let Some(usage_page) = Self::usage_page(usb, device_info) else {
-                return false;
-            };
-            let is_valid_hid_device =
-                is_valid_hid_device(usage_page, device_info.interface_number());
-            is_valid_hid_device
-                && is_valid_ledger(device_info.vendor_id(), device_info.product_id())
+            is_valid_ledger(device_info.vendor_id(), device_info.product_id())
+                && Some(LEDGER_HID_USAGE_PAGE) == Self::usage_page(usb, device_info)
         }) {
             match usb.open_path(device_info.path()) {
                 Ok(device) => {
@@ -484,11 +478,6 @@ impl RemoteWalletInfo {
                 || self.pubkey == Pubkey::default()
                 || other.pubkey == Pubkey::default())
     }
-}
-
-/// Helper to determine if a device is a valid HID
-pub fn is_valid_hid_device(usage_page: u16, interface_number: i32) -> bool {
-    usage_page == LEDGER_HID_USAGE_PAGE || interface_number == HID_USB_DEVICE_CLASS as i32
 }
 
 /// Helper to initialize hidapi and RemoteWalletManager
